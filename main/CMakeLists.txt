@@ -4,9 +4,6 @@ if(NOT (${IDF_TARGET} STREQUAL "esp32c3"))
 endif()
 
 if(DEFINED ENV{PRESERVE_I_FILES})
-     # Preserve *.i files
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -save-temps")
-
      # Provide fake app_main()
      set(FAKE_APP_MAIN "${CMAKE_SOURCE_DIR}/fake_main.c")
 endif()
