@@ -7,3 +7,6 @@ set -euox pipefail
 
 # First stage: preprocess *.h to *.i files
 PRESERVE_I_FILES=y idf.py --build-dir=preprocessed set-target esp32c3 build
+
+# Second stage: build and link with D files
+idf.py --build-dir=builddir set-target esp32c3 build
