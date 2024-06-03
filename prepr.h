@@ -1,2 +1,3 @@
-#define _Static_assert(expr) static_assert(expr, "_Static_assert message undefined")
-//~ #define _Static_assert(expr, msg) static_assert(expr, msg)
+#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+
+#define _Static_assert(...) (NUMARGS(__VA_ARGS__) == 1 ? (__VA_ARGS__, 0) : (__VA_ARGS__))
