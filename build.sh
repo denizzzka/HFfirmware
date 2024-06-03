@@ -12,14 +12,14 @@ echo Processing *.i files...
 
 # Removes definitions from .i files. For this purpose we need create intermediate conventional .c files from .i files
 # Also removes "# " lines to avoid makeheaders tool errors
-fdfind --base-directory ./preprocessed/ --type f --size +1b --glob "*.c.i" --ignore-file ../fd_ignore.txt \
+fdfind --base-directory ./preprocessed/esp-idf --type f --size +1b --glob "*.c.i" --ignore-file ../../fd_ignore.txt \
     --exec cp {} {.} \; \
     --exec sed -i -r 's/^# .+//g' {.} \; \
-    --exec ~/Dev/makeheaders/builddir/makeheaders {.} \; \
-    --exec rm {.} \;
+    --exec sed -i -r 's/asm volatile/__asm volatile/g' {.} \;
 
-# Create .c bindings from generated .h headers (D compiler isn't handles .h files directly)
-fdfind --base-directory ./preprocessed/ --type f --glob "*.h" --exec mv {} {.}.c \;
+# Create D bindings from generated .c files
+# FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
+~/Dev/dpp/bin/d++ --preprocess-only --no-sys-headers --include-path=./preprocessed/esp-idf/ --source-output-path=./preprocessed/ esp_idf.dpp
 
 echo Processing *.i files done
 
