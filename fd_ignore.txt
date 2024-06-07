@@ -1,1 +1,12 @@
-**/heap_caps*.c.i
+**/mcu_software.c
+**/esp_phy/
+**/esp-tls/
+**/lwip/
+**/bootloader_support/
+**/espcoredump/
+**/tcp_transport/
+**/mqtt/
+**/mbedtls/
+**/esp_gdbstub/
+**/wpa_supplicant/
+**/hal/

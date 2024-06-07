@@ -1,2 +1,1 @@
-#include <freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/tasks.c>
-#include <esp_driver_i2c/CMakeFiles/__idf_esp_driver_i2c.dir/i2c_master.c>
+#include <processed_for_dpp.c>
