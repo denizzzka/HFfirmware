@@ -1,13 +1,6 @@
 main/
-**/esp_phy/
-**/esp-tls/
-**/lwip/
-**/bootloader_support/
-**/espcoredump/
-**/tcp_transport/
-**/mqtt/
-**/mbedtls/
-**/esp_gdbstub/
-**/wpa_supplicant/
-**/hal/
 **/heap/
+**/hal/
+**/mbedtls/
+**/lwip/
+**/esp_supplicant/src/crypto/tls_mbedtls.c.i
