@@ -2,5 +2,5 @@ main/
 **/heap/
 **/hal/
 **/mbedtls/
-**/lwip/
 **/esp_supplicant/src/crypto/tls_mbedtls.c.i
+**/lwip/src/core/memp.c.i
