@@ -17,7 +17,10 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --glob "*.c.i" --ignore-
     --exec cp {} {.} \; \
     --exec sed -i -r 's/asm volatile/__asm volatile/g' {.} \; \
     --exec sed -i -r 's/__restrict/restrict/g' {.} \; \
-    --exec echo ./preprocessed/esp-idf/{.} \; | ~/Dev/diprocessor/diprocessor > ./preprocessed/processed_for_dpp.c
+    --exec echo ./preprocessed/esp-idf/{.} \; | ~/Dev/diprocessor/diprocessor --refs_as_comments > ./preprocessed/processed_for_dpp.c
+
+# Remove bodies
+~/Dev/makeheaders/builddir/makeheaders ./preprocessed/processed_for_dpp.c
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files

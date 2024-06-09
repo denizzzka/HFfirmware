@@ -1,4 +1,4 @@
-**/mcu_software.c
+main/
 **/esp_phy/
 **/esp-tls/
 **/lwip/
@@ -10,3 +10,4 @@
 **/esp_gdbstub/
 **/wpa_supplicant/
 **/hal/
+**/heap/
