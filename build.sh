@@ -19,6 +19,7 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --glob "*.c.i" --ignore-
     --exec sed -i -r 's/extern SLIST_HEAD/ SLIST_HEAD/g' {.} \; \
     --exec sed -i -r 's/asm volatile/__asm/g' {.} \; \
     --exec sed -i -r 's/__asm__/__asm/g' {.} \; \
+    --exec sed -i -r 's/ asm / __asm /g' {.} \; \
     --exec sed -i -r 's/__restrict/restrict/g' {.} \; \
     --exec sed -i -r 's/__inline__/inline/g' {.} \; \
     --exec sed -i -r 's/__inline/inline/g' {.} \; \
@@ -31,6 +32,7 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --glob "*.c.i" --ignore-
     --exec echo ./preprocessed/esp-idf/{.} \; > preprocessed_files_list.txt
 
 ~/Dev/diprocessor/diprocessor --prepr_refs_comments < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
+echo "./preprocessed/processed_for_dpp.c" | ~/Dev/diprocessor/peg/diprocessor_peg > ./preprocessed/processed_for_dpp.h
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
