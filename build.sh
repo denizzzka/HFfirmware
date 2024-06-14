@@ -13,14 +13,24 @@ echo "Processing *.i files..."
 # Removes definitions from .i files. For this purpose we need create intermediate conventional .c files from .i files
 # Also removes "# " lines to avoid makeheaders tool errors
 # restrict in freertos isn't compatible with __restrict in esp_ringbuf, ESP IDF issue?
+
 fdfind --base-directory ./preprocessed/esp-idf --type f --glob "*.c.i" --ignore-file ../../fd_ignore.txt \
     --exec cp {} {.} \; \
-    --exec sed -i -r 's/asm volatile/__asm volatile/g' {.} \; \
+    --exec sed -i -r 's/extern SLIST_HEAD/ SLIST_HEAD/g' {.} \; \
+    --exec sed -i -r 's/asm volatile/__asm/g' {.} \; \
+    --exec sed -i -r 's/__asm__/__asm/g' {.} \; \
     --exec sed -i -r 's/__restrict/restrict/g' {.} \; \
-    --exec echo ./preprocessed/esp-idf/{.} \; | ~/Dev/diprocessor/diprocessor --refs_as_comments > ./preprocessed/processed_for_dpp.c
+    --exec sed -i -r 's/__inline__/inline/g' {.} \; \
+    --exec sed -i -r 's/__inline/inline/g' {.} \; \
+    --exec sed -i -r 's/__volatile__/volatile/g' {.} \; \
+    --exec sed -i -r 's/__typeof/typeof/g' {.} \; \
+    --exec sed -i -r 's/typeof__/typeof/g' {.} \; \
+    --exec sed -i -r 's/__attribute\(/__attribute__(/g' {.} \; \
+    --exec sed -i -r 's/__attribute /__attribute__/g' {.} \; \
+    --exec sed -i -r 's/__extension__//g' {.} \; \
+    --exec echo ./preprocessed/esp-idf/{.} \; > preprocessed_files_list.txt
 
-# Remove bodies
-~/Dev/makeheaders/builddir/makeheaders ./preprocessed/processed_for_dpp.c
+~/Dev/diprocessor/diprocessor --prepr_refs_comments < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
