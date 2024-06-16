@@ -31,14 +31,19 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --glob "*.c.i" --ignore-
     --exec sed -i -r 's/__extension__//g' {.} \; \
     --exec echo ./preprocessed/esp-idf/{.} \; > preprocessed_files_list.txt
 
+echo "Merging *.i files"
+
 ~/Dev/diprocessor/diprocessor --prepr_refs_comments < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
+
+echo "Convert merged C code to .h"
+
 echo "./preprocessed/processed_for_dpp.c" | ~/Dev/diprocessor/peg/diprocessor_peg > ./preprocessed/processed_for_dpp.h
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
 ~/Dev/dpp/bin/d++ --preprocess-only --no-sys-headers --include-path=./preprocessed/ --source-output-path=./preprocessed/ esp_idf.dpp
 
-echo "Processing *.i files done"
+echo "...Processing *.i files done"
 
 # Second stage: build and link with D files
 idf.py --build-dir=builddir set-target esp32c3 build

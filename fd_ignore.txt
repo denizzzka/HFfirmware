@@ -1,5 +1,5 @@
 main/
-**/heap2/
+**/vfs.c.i
 **/hal/
 **/mbedtls/
 **/esp_supplicant/src/crypto/tls_mbedtls.c.i
@@ -7,3 +7,5 @@ main/
 **/app_update/
 **/heap_caps.c.i
 **/heap_caps_init.c.i
+**/wpa_supplicant/port/os_xtensa.c.i
+**/src/ffunicode.c.i
