@@ -104,14 +104,14 @@ string mergeFewASTs(R)(ref R fileNames)
     uniqNum++;
 
     const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
-    const astMergeArgs = fileNames.map!(f => ["-Xclang", "-ast-merge", "-Xclang", f]).join.array;
+    const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
 
     // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
 
-    auto cmdLine = clangArgsBase
-        ~[ret_filename]
-        ~astMergeArgs
-        ~["/dev/null"];
+    auto cmdLine =
+        [clangBinary, "-cc1"]
+         ~astMergeArgs
+        ~["-emit-pch", "-o", ret_filename, "/dev/null"];
 
     "Merge AST".writeln;
     cmdLine.join(" ").writeln;
