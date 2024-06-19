@@ -17,17 +17,12 @@ idf_component_register(SRCS
 
 set(D_COMPILER "ldc2")
 set(D_COMPILER_FLAGS "--mtriple=riscv32-unknown-newlib-elf" "--mattr=+m,+c,+a" --fthread-model=local-exec "-c" "-betterC")
-set(D_IMPORTS
-     "${CMAKE_SOURCE_DIR}/preprocessed/esp-idf/freertos/CMakeFiles/__idf_freertos.dir/FreeRTOS-Kernel/tasks.c"
-     "${CMAKE_SOURCE_DIR}/preprocessed/esp-idf/esp_driver_i2c/CMakeFiles/__idf_esp_driver_i2c.dir/i2c_master.c"
-)
 
 set(D_OBJ_PATH "${CMAKE_BINARY_DIR}/d_obj.o")
 
 add_custom_command(
      OUTPUT ${D_OBJ_PATH}
      COMMAND ${D_COMPILER} ${D_COMPILER_FLAGS} "-of=${D_OBJ_PATH}"
-     ${D_IMPORTS}
      "${CMAKE_SOURCE_DIR}/main/d/main.d"
 )
 

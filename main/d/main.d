@@ -1,6 +1,7 @@
 module main;
 
-import i2c_master;
+import tasks; //FreeRTOS calls
+//~ import i2c_master;
 
 pragma(crt_constructor)
 shared static this()
