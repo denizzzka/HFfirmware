@@ -1,3 +1,9 @@
+import std.algorithm;
+import std.conv: to;
+import std.string: chomp;
+import std.range;
+import std.stdio;
+
 struct CliOptions
 {
     bool refs_as_comments;
@@ -29,55 +35,82 @@ int main(string[] args)
         }
     }
 
-    import std.algorithm;
-    import std.conv: to;
-    import std.string: chomp;
-    import std.range;
-    import std.stdio;
+    import std.parallelism;
 
-    static string createAST(string filename)
-    {
-        import std.process;
+    defaultPoolThreads(6);
 
-        auto cmdLine = [
-            "clang",
-            "-emit-ast",
-            "-ferror-limit=1",
-            "--target=riscv32", // base type sizes is not defined in preprocessed files
-            "-o", "/dev/stdout",
-            filename,
-        ];
+    const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
+    auto initialASTs = taskPool.amap!createAST(filenames);
 
-        auto r = execute(args: cmdLine);
-
-        if(r[0] != 0)
-            throw new Exception("error during processing file "~filename, r[1]);
-
-        writeln("cmd ", cmdLine, " done");
-
-        return r[1];
-    }
+    ">>>>>".writeln;
+    filenames.each!writeln;
 
     const batchSize = 3;
 
-    size_t tmpNum;
+    //~ auto ret = taskPool.fold!((a, b) => (a~b).mergeFewASTs)(
+        //~ initialASTs.chunks(batchSize)
+    //~ );
 
-    auto initialASTs = stdin
-        .byLineCopy // for reading from stdin only, for files can be used .byLine
-        .map!(filename => createAST(filename));
+    static string[] mergeChunks(string[] a, string[] b) => a;
 
-    //~ auto optionsChains = stdin
-        //~ .byLineCopy // for reading from stdin only, for files can be used .byLine
-        //~ .chunks(batchSize)
-        //~ .map!(
-            //~ a => a.map!(f => ["-ast-merge"].chain([f])).join
-        //~ )
-        //~ .map!(a => exec(a));
+    auto retChunks = taskPool.fold!mergeChunks(
+        initialASTs.chunks(batchSize)
+    );
 
-    //~ optionsChains.each!writeln;
-    initialASTs.each!writeln;
+    static string mergeSingleAST(string a, string b) => a;
+
+    auto ret = taskPool.fold!mergeSingleAST(retChunks);
+
+    "====".writeln;
+    //~ initialASTs.chunks(batchSize).each!writeln;
+    writeln(ret);
 
     bool wasIgnoredFile;
 
     return wasIgnoredFile ? 3 : 0;
+}
+
+import std.process;
+
+string createAST(string filename)
+{
+    const ret_filename = filename~".ast";
+
+    auto cmdLine = [
+        "clang",
+        "-emit-ast",
+        "-ferror-limit=1",
+        "--target=riscv32", // base type sizes is not defined in preprocessed files
+        "-o", ret_filename,
+        filename,
+    ];
+
+    auto r = execute(args: cmdLine);
+
+    if(r[0] != 0)
+        throw new Exception("error during processing file "~filename, r[1]);
+
+    return ret_filename;
+}
+
+string mergeFewASTs(R)(ref R fileNames)
+{
+    //TODO: remove files if done
+
+    // clang -cc1 -ast-merge test3.ast -ast-merge test3.ast /dev/null -emit-pch -o main.ast
+
+    const outfilename = "/tmp/removeme.ast";
+    const astMergeArgs = fileNames.map!(f => ["-ast-merge"].chain([f])).join;
+
+    auto cmdLine =
+        ["clang", "-cc1"]
+        ~astMergeArgs
+        ~["-emit-pch", "-o", outfilename, "/dev/null"];
+
+    auto r = execute(args: cmdLine);
+
+    if(r[0] != 0)
+        throw new Exception("error during merging AST processing files "~astRange.to!string, r[1]);
+
+    return outfilename;
 }
