@@ -37,7 +37,7 @@ int main(string[] args)
 
     import std.parallelism;
 
-    defaultPoolThreads(6);
+    defaultPoolThreads(10);
 
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
     auto initialASTs = taskPool.amap!createAST(filenames);
@@ -51,7 +51,7 @@ int main(string[] args)
         return [mergeFewASTs(s)];
     }
 
-    const batchSize = 50;
+    const batchSize = 10;
 
     //~ auto retChunks = initialASTs
         //~ .chunks(batchSize)
@@ -112,7 +112,7 @@ string mergeFewASTs(string[] fileNames)
 
     auto cmdLine = clangArgsBase ~ ret_filename ~ astMergeArgs;
 
-    "Merge AST".writeln;
+    writeln("Merge AST batch #", currBatchNum);
     cmdLine.join(" ").writeln;
 
     auto r = execute(args: cmdLine);
@@ -123,7 +123,7 @@ string mergeFewASTs(string[] fileNames)
     import std.file;
     fileNames.each!remove;
 
-    writeln("(", currFileNum.to!string, " done) MERGED: ", fileNames);
+    writeln("MERGED batch #", currBatchNum, ", total ", currFileNum.to!string, " files done");
 
     return ret_filename;
 }
