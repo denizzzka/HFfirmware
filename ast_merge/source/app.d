@@ -80,6 +80,7 @@ immutable string[] clangArgsBase = [
         "-ferror-limit", "1",
         "-triple", "riscv32", // base type sizes is not defined in preprocessed files
         "-emit-pch",
+        "/dev/null", // input code file disabled
         "-o", // next should be ret_filename
 ];
 
@@ -99,6 +100,9 @@ string createAST(string filename)
 
 string mergeFewASTs(string[] fileNames)
 {
+    if(fileNames.length == 1)
+        return fileNames[0]; // skip latest bogus run
+
     import core.atomic;
 
     shared static size_t batchNum;
