@@ -99,9 +99,9 @@ string mergeFewASTs(R)(ref R fileNames)
     import core.atomic;
 
     shared static size_t uniqNum;
-    uniqNum.atomicOp!"+="(1);
+    const size_t currNum = uniqNum.atomicOp!"+="(1);
 
-    const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
+    const ret_filename = "/tmp/remove_me_"~currNum.to!string~".ast";
     const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
 
     // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
@@ -115,6 +115,9 @@ string mergeFewASTs(R)(ref R fileNames)
 
     if(r[0] != 0)
         throw new Exception("error during merging AST processing files "~fileNames.to!string, r[1]);
+
+    import std.file;
+    fileNames.each!remove;
 
     writeln("MERGED: ", fileNames);
 
