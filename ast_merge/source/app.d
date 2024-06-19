@@ -96,8 +96,10 @@ string mergeFewASTs(R)(ref R fileNames)
 {
     //TODO: remove files if done
 
-    static size_t uniqNum;
-    uniqNum++;
+    import core.atomic;
+
+    shared static size_t uniqNum;
+    uniqNum.atomicOp!"+="(1);
 
     const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
     const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
