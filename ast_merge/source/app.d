@@ -39,18 +39,16 @@ int main(string[] args)
     {
         import std.process;
 
-        Config cfg;
-        cfg.flags |= Config.Flags.stderrPassThrough;
-
         auto cmdLine = [
             "clang",
             "-emit-ast",
-            "-target", "riscv32-unknown-none-ilp32", // base type sizes is not defined in preprocessed files
+            "-ferror-limit=1",
+            "--target=riscv32", // base type sizes is not defined in preprocessed files
             "-o", "/dev/stdout",
             filename,
         ];
 
-        auto r = execute(args: cmdLine, config: cfg);
+        auto r = execute(args: cmdLine);
 
         if(r[0] != 0)
             throw new Exception("error during processing file "~filename, r[1]);

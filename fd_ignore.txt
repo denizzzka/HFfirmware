@@ -1,11 +1,1 @@
 main/
-**/vfs.c.i
-**/hal/
-**/mbedtls/
-**/esp_supplicant/src/crypto/tls_mbedtls.c.i
-**/lwip/src/core/memp.c.i
-**/app_update/
-**/heap_caps.c.i
-**/heap_caps_init.c.i
-**/wpa_supplicant/port/os_xtensa.c.i
-**/src/ffunicode.c.i
