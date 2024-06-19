@@ -6,9 +6,8 @@ import std.stdio;
 
 struct CliOptions
 {
-    bool refs_as_comments;
-    bool prepr_refs_comments;
-    bool suppress_refs;
+    size_t batch_size = 1;
+    uint threads = 1;
 }
 
 int main(string[] args)
@@ -20,9 +19,8 @@ int main(string[] args)
     {
         //TODO: replace by option for files splitten by zero byte
         auto helpInformation = getopt(args,
-            "refs_as_comments", `"Add // before # 123 "/path/to/file.h" lines"`, &options.refs_as_comments,
-            "prepr_refs_comments", `Add comment lines with references to a preprocessed files`, &options.prepr_refs_comments,
-            "suppress_refs", `Suppress # 123 "/path/to/file.h" lines`, &options.suppress_refs,
+            "batch_size", `batch_size`, &options.batch_size,
+            "threads", `threads`, &options.threads,
         );
 
         if (helpInformation.helpWanted)
@@ -37,7 +35,7 @@ int main(string[] args)
 
     import std.parallelism;
 
-    defaultPoolThreads(10);
+    defaultPoolThreads(options.threads);
 
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
     auto initialASTs = taskPool.amap!createAST(filenames);
@@ -51,15 +49,13 @@ int main(string[] args)
         return [mergeFewASTs(s)];
     }
 
-    const batchSize = 10;
-
     //~ auto retChunks = initialASTs
         //~ .chunks(batchSize)
         //~ .fold!mergeTwoChunks
         //~ .mergeFewASTs();
 
     auto retChunks = taskPool.fold!mergeTwoChunks(
-        initialASTs.chunks(batchSize)
+        initialASTs.chunks(options.batch_size)
     ).mergeFewASTs();
 
     "====".writeln;
