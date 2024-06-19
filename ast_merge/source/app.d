@@ -42,7 +42,7 @@ int main(string[] args)
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
     auto initialASTs = taskPool.amap!createAST(filenames);
 
-    ">>>>>".writeln;
+    //~ ">>>>>".writeln;
     //~ filenames.each!writeln;
 
     const batchSize = 1;
@@ -50,6 +50,11 @@ int main(string[] args)
     static string[] mergeTwoChunks(string[] a, string[] b)
     {
         auto s = a~b;
+
+        import core.memory: GC;
+        GC.collect();
+        GC.minimize();
+
         return [mergeFewASTs(s)];
     }
 
@@ -57,8 +62,8 @@ int main(string[] args)
         initialASTs.chunks(batchSize)
     );
 
-    "====".writeln;
-    writeln(retChunks);
+    //~ "====".writeln;
+    //~ writeln(retChunks);
 
     bool wasIgnoredFile;
 
@@ -67,7 +72,7 @@ int main(string[] args)
 
 import std.process;
 
-immutable clangBinary = "clang-19";
+immutable clangBinary = "clang-18";
 
 immutable string[] clangArgsBase = [
         clangBinary,
@@ -100,20 +105,27 @@ string mergeFewASTs(R)(ref R fileNames)
 {
     //TODO: remove files if done
 
-    size_t uniqNum;
+    static size_t uniqNum;
     uniqNum++;
 
     const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
-    const astMergeArgs = fileNames.map!(f => ["-Xclang", "-ast-merge", "-Xclang", f]).join.array;
+    //~ const astMergeArgs = fileNames.map!(f => ["-Xclang", "-ast-merge", "-Xclang", f]).join.array;
+    const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
 
     // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
+    // clang -cc1 -ast-merge ./preprocessed/esp-idf/heap/CMakeFiles/__idf_heap.dir/tlsf/tlsf.c.ast /dev/null -emit-pch -o 333.ast
 
-    auto cmdLine = clangArgsBase
-        ~[ret_filename]
-        ~astMergeArgs
-        ~["/dev/null"];
+    auto cmdLine =
+        [clangBinary, "-cc1"]
+         ~astMergeArgs
+        ~["-emit-pch", "-o", ret_filename, "/dev/null"];
 
-    "Merge AST".writeln;
+    //~ auto cmdLine = clangArgsBase
+        //~ ~[ret_filename]
+        //~ ~astMergeArgs
+        //~ ~["/dev/null"];
+
+    writeln("Merge AST to file ", ret_filename);
     cmdLine.join(" ").writeln;
 
     auto r = execute(args: cmdLine);
@@ -121,7 +133,7 @@ string mergeFewASTs(R)(ref R fileNames)
     if(r[0] != 0)
         throw new Exception("error during merging AST processing files "~fileNames.to!string, r[1]);
 
-    writeln("MERGED: ", fileNames);
+    //~ writeln("MERGED: ", fileNames);
 
     return ret_filename;
 }

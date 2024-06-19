@@ -6,7 +6,7 @@ set -euox pipefail
 # . ~/.../Espressif_IDE/esp-idf-v5.2.1/export.fish
 
 # First stage: preprocess *.h to *.i files
-PRESERVE_I_FILES=y idf.py --build-dir=preprocessed set-target esp32c3 build
+#~ PRESERVE_I_FILES=y idf.py --build-dir=preprocessed set-target esp32c3 build
 
 echo "Processing *.i files..."
 
@@ -22,7 +22,9 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --extension "c.i" \
 
 echo "Merging *.i files"
 
-./ast_merge/ast_merge < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
+#~ ./ast_merge/ast_merge < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
+#~ ./ast_merge/ast_merge < preprocessed_files_list.txt
+head -n 15 preprocessed_files_list.txt | ./ast_merge/ast_merge
 
 echo "Convert merged C code to .h"
 
@@ -30,9 +32,9 @@ echo "./preprocessed/processed_for_dpp.c" | ~/Dev/diprocessor/peg/diprocessor_pe
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
-~/Dev/dpp/bin/d++ --preprocess-only --no-sys-headers --include-path=./preprocessed/ --source-output-path=./preprocessed/ esp_idf.dpp
+#~ ~/Dev/dpp/bin/d++ --preprocess-only --no-sys-headers --include-path=./preprocessed/ --source-output-path=./preprocessed/ esp_idf.dpp
 
 echo "...Processing *.i files done"
 
 # Second stage: build and link with D files
-idf.py --build-dir=builddir set-target esp32c3 build
+#~ idf.py --build-dir=builddir set-target esp32c3 build
