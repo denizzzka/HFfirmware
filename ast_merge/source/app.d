@@ -47,23 +47,18 @@ int main(string[] args)
 
     const batchSize = 3;
 
-    //~ auto ret = taskPool.fold!((a, b) => (a~b).mergeFewASTs)(
-        //~ initialASTs.chunks(batchSize)
-    //~ );
+    static string[] mergeTwoChunks(string[] a, string[] b)
+    {
+        auto s = a~b;
+        return [mergeFewASTs(s)];
+    }
 
-    static string[] mergeChunks(string[] a, string[] b) => a;
-
-    auto retChunks = taskPool.fold!mergeChunks(
+    auto retChunks = taskPool.fold!mergeTwoChunks(
         initialASTs.chunks(batchSize)
     );
 
-    static string mergeSingleAST(string a, string b) => a;
-
-    auto ret = taskPool.fold!mergeSingleAST(retChunks);
-
     "====".writeln;
-    //~ initialASTs.chunks(batchSize).each!writeln;
-    writeln(ret);
+    writeln(retChunks);
 
     bool wasIgnoredFile;
 
@@ -110,7 +105,7 @@ string mergeFewASTs(R)(ref R fileNames)
     auto r = execute(args: cmdLine);
 
     if(r[0] != 0)
-        throw new Exception("error during merging AST processing files "~astRange.to!string, r[1]);
+        throw new Exception("error during merging AST processing files "~fileNames.to!string, r[1]);
 
     return outfilename;
 }
