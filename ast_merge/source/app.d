@@ -69,38 +69,24 @@ import std.process;
 
 immutable clangBinary = "clang-19";
 
-string createAST(string filename)
-{
-    const ret_filename = filename~".ast";
-
-    // clang -cc1 -emit-pch -o main.ast main.c
-    // clang -cc1 -emit-pch -o bar.ast bar.c
-    // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch test3.c -Xclang -o -Xclang test3.c.ast
-    auto cmdLine = [
+immutable string[] clangArgsBase = [
         clangBinary,
         "-fsyntax-only",
         "-ferror-limit=1",
         "--target=riscv32", // base type sizes is not defined in preprocessed files
         "-Xclang", "-emit-pch",
-        "-Xclang", "-o", "-Xclang" , ret_filename,
-        filename,
-    ];
+        "-Xclang", "-o", "-Xclang", // next should be ret_filename
+];
 
-/+
-    auto cmdLine = [
-        clangBinary,
-        "-emit-ast",
-        "-ferror-limit=1",
-        "--target=riscv32", // base type sizes is not defined in preprocessed files
-        //~ "-o", "/dev/null",
-        //~ "-Xclang",
-        //~ "-emit-pch",
-        "-o", ret_filename,
+string createAST(string filename)
+{
+    const ret_filename = filename~".ast";
+
+    auto cmdLine = clangArgsBase
+    ~[
+        ret_filename,
         filename,
     ];
-+/
-    "Create AST".writeln;
-    cmdLine.join(" ").writeln;
 
     auto r = execute(args: cmdLine);
 
@@ -112,8 +98,6 @@ string createAST(string filename)
 
 string mergeFewASTs(R)(ref R fileNames)
 {
-    writeln("BEGIN MERGE OF: ", fileNames);
-
     //TODO: remove files if done
 
     size_t uniqNum;
@@ -124,23 +108,10 @@ string mergeFewASTs(R)(ref R fileNames)
 
     // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
 
-    auto cmdLine = [
-        clangBinary,
-        "-fsyntax-only",
-        "-ferror-limit=1",
-        "--target=riscv32", // base type sizes is not defined in preprocessed files
-        "-Xclang" , "-emit-pch",
-        "-Xclang" , "-o", "-Xclang", ret_filename,
-    ]~astMergeArgs~[
-        "/dev/null"
-    ];
-
-/+
-    auto cmdLine =
-        [clangBinary, "-cc1"]
+    auto cmdLine = clangArgsBase
+        ~[ret_filename]
         ~astMergeArgs
-        ~["-emit-pch", "-o", outfilename, "/dev/null"];
-+/
+        ~["/dev/null"];
 
     "Merge AST".writeln;
     cmdLine.join(" ").writeln;
