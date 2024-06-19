@@ -43,9 +43,9 @@ int main(string[] args)
     auto initialASTs = taskPool.amap!createAST(filenames);
 
     ">>>>>".writeln;
-    filenames.each!writeln;
+    //~ filenames.each!writeln;
 
-    const batchSize = 3;
+    const batchSize = 1;
 
     static string[] mergeTwoChunks(string[] a, string[] b)
     {
@@ -73,14 +73,34 @@ string createAST(string filename)
 {
     const ret_filename = filename~".ast";
 
+    // clang -cc1 -emit-pch -o main.ast main.c
+    // clang -cc1 -emit-pch -o bar.ast bar.c
+    // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch test3.c -Xclang -o -Xclang test3.c.ast
+    auto cmdLine = [
+        clangBinary,
+        "-fsyntax-only",
+        "-ferror-limit=1",
+        "--target=riscv32", // base type sizes is not defined in preprocessed files
+        "-Xclang", "-emit-pch",
+        "-Xclang", "-o", "-Xclang" , ret_filename,
+        filename,
+    ];
+
+/+
     auto cmdLine = [
         clangBinary,
         "-emit-ast",
         "-ferror-limit=1",
         "--target=riscv32", // base type sizes is not defined in preprocessed files
+        //~ "-o", "/dev/null",
+        //~ "-Xclang",
+        //~ "-emit-pch",
         "-o", ret_filename,
         filename,
     ];
++/
+    "Create AST".writeln;
+    cmdLine.join(" ").writeln;
 
     auto r = execute(args: cmdLine);
 
@@ -96,15 +116,34 @@ string mergeFewASTs(R)(ref R fileNames)
 
     //TODO: remove files if done
 
-    // clang -cc1 -ast-merge test3.ast -ast-merge test3.ast /dev/null -emit-pch -o main.ast
+    size_t uniqNum;
+    uniqNum++;
 
-    const outfilename = "/tmp/removeme.ast";
-    const astMergeArgs = fileNames.map!(f => ["-ast-merge"].chain([f])).join;
+    const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
+    const astMergeArgs = fileNames.map!(f => ["-Xclang", "-ast-merge", "-Xclang", f]).join.array;
 
+    // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
+
+    auto cmdLine = [
+        clangBinary,
+        "-fsyntax-only",
+        "-ferror-limit=1",
+        "--target=riscv32", // base type sizes is not defined in preprocessed files
+        "-Xclang" , "-emit-pch",
+        "-Xclang" , "-o", "-Xclang", ret_filename,
+    ]~astMergeArgs~[
+        "/dev/null"
+    ];
+
+/+
     auto cmdLine =
         [clangBinary, "-cc1"]
         ~astMergeArgs
         ~["-emit-pch", "-o", outfilename, "/dev/null"];
++/
+
+    "Merge AST".writeln;
+    cmdLine.join(" ").writeln;
 
     auto r = execute(args: cmdLine);
 
@@ -113,5 +152,5 @@ string mergeFewASTs(R)(ref R fileNames)
 
     writeln("MERGED: ", fileNames);
 
-    return outfilename;
+    return ret_filename;
 }
