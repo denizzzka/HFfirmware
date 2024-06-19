@@ -42,10 +42,8 @@ int main(string[] args)
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
     auto initialASTs = taskPool.amap!createAST(filenames);
 
-    ">>>>>".writeln;
+    //~ ">>>>>".writeln;
     //~ filenames.each!writeln;
-
-    const batchSize = 1;
 
     static string[] mergeTwoChunks(string[] a, string[] b)
     {
@@ -53,12 +51,19 @@ int main(string[] args)
         return [mergeFewASTs(s)];
     }
 
+    const batchSize = 50;
+
+    //~ auto retChunks = initialASTs
+        //~ .chunks(batchSize)
+        //~ .fold!mergeTwoChunks
+        //~ .mergeFewASTs();
+
     auto retChunks = taskPool.fold!mergeTwoChunks(
         initialASTs.chunks(batchSize)
-    );
+    ).mergeFewASTs();
 
     "====".writeln;
-    writeln(retChunks);
+    retChunks.writeln;
 
     bool wasIgnoredFile;
 
@@ -92,19 +97,18 @@ string createAST(string filename)
     return ret_filename;
 }
 
-string mergeFewASTs(R)(ref R fileNames)
+string mergeFewASTs(string[] fileNames)
 {
-    //TODO: remove files if done
-
     import core.atomic;
 
-    shared static size_t uniqNum;
-    const size_t currNum = uniqNum.atomicOp!"+="(1);
+    shared static size_t batchNum;
+    const size_t currBatchNum = batchNum.atomicOp!"+="(1);
 
-    const ret_filename = "/tmp/remove_me_"~currNum.to!string~".ast";
+    shared static size_t fileNum;
+    const size_t currFileNum = fileNum.atomicOp!"+="(fileNames.length);
+
+    const ret_filename = "/tmp/remove_me_"~currBatchNum.to!string~".ast";
     const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
-
-    // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
 
     auto cmdLine = clangArgsBase ~ ret_filename ~ astMergeArgs;
 
@@ -119,7 +123,7 @@ string mergeFewASTs(R)(ref R fileNames)
     import std.file;
     fileNames.each!remove;
 
-    writeln("MERGED: ", fileNames);
+    writeln("(", currFileNum.to!string, " done) MERGED: ", fileNames);
 
     return ret_filename;
 }
