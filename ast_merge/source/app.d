@@ -67,12 +67,14 @@ int main(string[] args)
 
 import std.process;
 
+immutable clangBinary = "clang-19";
+
 string createAST(string filename)
 {
     const ret_filename = filename~".ast";
 
     auto cmdLine = [
-        "clang",
+        clangBinary,
         "-emit-ast",
         "-ferror-limit=1",
         "--target=riscv32", // base type sizes is not defined in preprocessed files
@@ -90,6 +92,8 @@ string createAST(string filename)
 
 string mergeFewASTs(R)(ref R fileNames)
 {
+    writeln("BEGIN MERGE OF: ", fileNames);
+
     //TODO: remove files if done
 
     // clang -cc1 -ast-merge test3.ast -ast-merge test3.ast /dev/null -emit-pch -o main.ast
@@ -98,7 +102,7 @@ string mergeFewASTs(R)(ref R fileNames)
     const astMergeArgs = fileNames.map!(f => ["-ast-merge"].chain([f])).join;
 
     auto cmdLine =
-        ["clang", "-cc1"]
+        [clangBinary, "-cc1"]
         ~astMergeArgs
         ~["-emit-pch", "-o", outfilename, "/dev/null"];
 
@@ -106,6 +110,8 @@ string mergeFewASTs(R)(ref R fileNames)
 
     if(r[0] != 0)
         throw new Exception("error during merging AST processing files "~fileNames.to!string, r[1]);
+
+    writeln("MERGED: ", fileNames);
 
     return outfilename;
 }
