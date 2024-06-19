@@ -67,13 +67,12 @@ int main(string[] args)
 
 import std.process;
 
-immutable clangBinary = "clang-18";
+immutable clangBinary = "clang-19";
 
 immutable string[] clangArgsBase = [
         clangBinary,
         "-cc1",
         "-ferror-limit", "1",
-        "-fsyntax-only",
         "-triple", "riscv32", // base type sizes is not defined in preprocessed files
         "-emit-pch",
         "-o", // next should be ret_filename
@@ -105,7 +104,7 @@ string mergeFewASTs(R)(ref R fileNames)
 
     // clang-19 -fsyntax-only -ferror-limit=1 --target=riscv32 -Xclang -emit-pch -Xclang -o -Xclang test888.ast -Xclang -ast-merge -Xclang test3.c.ast /dev/null
 
-    auto cmdLine = clangArgsBase ~ astMergeArgs ~ [ret_filename]; //, "/dev/null"];
+    auto cmdLine = clangArgsBase ~ ret_filename ~ astMergeArgs;
 
     "Merge AST".writeln;
     cmdLine.join(" ").writeln;
