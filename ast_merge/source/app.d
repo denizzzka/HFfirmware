@@ -74,7 +74,7 @@ immutable string[] clangArgsBase = [
         "-cc1",
         "-ferror-limit", "1",
         "-fsyntax-only",
-        "-aux-target-cpu", "riscv32", // base type sizes is not defined in preprocessed files
+        "-triple", "riscv32", // base type sizes is not defined in preprocessed files
         "-emit-pch",
         "-o", // next should be ret_filename
 ];
