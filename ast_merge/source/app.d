@@ -100,7 +100,7 @@ string mergeFewASTs(R)(ref R fileNames)
 {
     //TODO: remove files if done
 
-    size_t uniqNum;
+    static size_t uniqNum;
     uniqNum++;
 
     const ret_filename = "/tmp/remove_me_"~uniqNum.to!string~".ast";
