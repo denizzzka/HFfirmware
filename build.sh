@@ -18,15 +18,16 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --extension "c.i" \
     --exec cp {} {.} \; \
     --exec sed -i -r 's/__atomic_/__atomic_DISABLED_/g' {.} \; \
     --exec sed -i -r 's/__sync_/REDECLARED__sync_/g' {.} \; \
+    --exec sed -i -r 's/typedef long unsigned int __uint32_t/typedef unsigned int __uint32_t/g' {.} \; \
     --exec echo ./preprocessed/esp-idf/{.} \; > preprocessed_files_list.txt
 
 echo "Merging *.i files"
 
-./ast_merge/ast_merge < preprocessed_files_list.txt > ./preprocessed/processed_for_dpp.c
+time ./ast_merge/ast_merge --batch_size=10 --threads=8 --include=importc.h --output ./preprocessed/processed_for_dpp.c < preprocessed_files_list.txt
 
 echo "Convert merged C code to .h"
 
-echo "./preprocessed/processed_for_dpp.c" | ~/Dev/diprocessor/peg/diprocessor_peg > ./preprocessed/processed_for_dpp.h
+#~ echo "./preprocessed/processed_for_dpp.c" | ~/Dev/diprocessor/peg/diprocessor_peg > ./preprocessed/processed_for_dpp.h
 
 # Create D bindings from generated .c files
 # FIXME: Used DPP branch: https://github.com/denizzzka/dpp/tree/c_and_i_files
