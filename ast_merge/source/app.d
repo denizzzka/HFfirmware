@@ -102,6 +102,8 @@ string createAST(string filename)
 string mergeFewASTs(string[] fileNames, const string prettyPrintedFile = null)
 {
     import core.atomic;
+    import core.thread.osthread: getpid;
+    import std.file: remove;
 
     shared static size_t batchNum;
     const size_t currBatchNum = batchNum.atomicOp!"+="(1);
@@ -111,7 +113,7 @@ string mergeFewASTs(string[] fileNames, const string prettyPrintedFile = null)
 
     const ret_filename = prettyPrintedFile
         ? prettyPrintedFile
-        : "/tmp/remove_me_"~currBatchNum.to!string~".ast";
+        : "/tmp/remove_me_"~getpid.to!string~"_"~currBatchNum.to!string~".ast";
 
     const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
 
@@ -129,7 +131,6 @@ string mergeFewASTs(string[] fileNames, const string prettyPrintedFile = null)
     if(r[0] != 0)
         throw new Exception("error during merging AST processing files "~fileNames.to!string, r[1]);
 
-    import std.file;
     fileNames.each!remove;
 
     writeln("MERGED batch #", currBatchNum, ", total ", currFileNum.to!string, " files done");
