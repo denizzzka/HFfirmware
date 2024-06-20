@@ -17,7 +17,7 @@ int main(string[] args)
     CliOptions options;
 
     {
-        //TODO: replace by option for files splitten by zero byte
+        //TODO: add option for files splitten by zero byte
         auto helpInformation = getopt(args,
             "batch_size", `batch_size`, &options.batch_size,
             "threads", `threads`, &options.threads,
@@ -37,8 +37,8 @@ int main(string[] args)
 
     defaultPoolThreads(options.threads);
 
-    const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf
-    auto initialASTs = taskPool.amap!createAST(filenames);
+    const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf?
+    auto initialASTs = taskPool.amap!createAST(filenames).array;
 
     //~ ">>>>>".writeln;
     //~ filenames.each!writeln;
@@ -49,17 +49,18 @@ int main(string[] args)
         return [mergeFewASTs(s)];
     }
 
-    //~ auto retChunks = initialASTs
-        //~ .chunks(batchSize)
-        //~ .fold!mergeTwoChunks
-        //~ .mergeFewASTs();
+    auto chunks = initialASTs.chunks(options.batch_size);
 
-    auto retChunks = taskPool.fold!mergeTwoChunks(
-        initialASTs.chunks(options.batch_size)
-    ).mergeFewASTs();
+    //TODO: relace by fold over 8 items (8 == processes)
+    while(chunks.length > 1)
+    {
+        chunks = taskPool.amap!mergeFewASTs(chunks).chunks(options.batch_size);
+    }
+
+    auto ret = chunks.front.mergeFewASTs();
 
     "====".writeln;
-    retChunks.writeln;
+    ret.writeln;
 
     bool wasIgnoredFile;
 
