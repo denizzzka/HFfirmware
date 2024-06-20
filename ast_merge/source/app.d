@@ -7,20 +7,22 @@ import std.stdio;
 struct CliOptions
 {
     string out_file;
+    string[] include_files;
     size_t batch_size = 1;
     uint threads = 1;
 }
+
+CliOptions options;
 
 int main(string[] args)
 {
     import std.getopt;
 
-    CliOptions options;
-
     {
         //TODO: add option for files splitten by zero byte
         auto helpInformation = getopt(args,
             "output", `Output file`, &options.out_file,
+            "include", `Additional include files`, &options.include_files,
             "batch_size", `batch_size`, &options.batch_size,
             "threads", `threads`, &options.threads,
         );
@@ -89,7 +91,14 @@ string createAST(string filename)
 {
     const ret_filename = filename~".ast";
 
-    auto cmdLine = clangArgsBase ~ ret_filename ~ "-emit-pch" ~ filename;
+    const includes = options.include_files.map!(a => ["-include", a]).join.array;
+
+    auto cmdLine =
+        clangArgsBase
+        ~ret_filename
+        ~"-emit-pch"
+        ~includes
+        ~filename;
 
     auto r = execute(args: cmdLine);
 
