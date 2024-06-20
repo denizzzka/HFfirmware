@@ -6,6 +6,7 @@ import std.stdio;
 
 struct CliOptions
 {
+    string out_file;
     size_t batch_size = 1;
     uint threads = 1;
 }
@@ -19,9 +20,16 @@ int main(string[] args)
     {
         //TODO: add option for files splitten by zero byte
         auto helpInformation = getopt(args,
+            "output", `Output file`, &options.out_file,
             "batch_size", `batch_size`, &options.batch_size,
             "threads", `threads`, &options.threads,
         );
+
+        if(options.out_file == "")
+        {
+            stderr.writeln("Output file not specified");
+            helpInformation.helpWanted = true;
+        }
 
         if (helpInformation.helpWanted)
         {
@@ -33,15 +41,18 @@ int main(string[] args)
         }
     }
 
+    import std.file: write;
+
+    write(options.out_file, ""); // to ensure that file can be created
+
     import std.parallelism;
 
     defaultPoolThreads(options.threads);
 
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf?
-    auto initialASTs = taskPool.amap!createAST(filenames).array;
 
-    //~ ">>>>>".writeln;
-    //~ filenames.each!writeln;
+    writeln("Prepare AST files from code files");
+    auto initialASTs = taskPool.amap!createAST(filenames).array;
 
     static string[] mergeTwoChunks(string[] a, string[] b)
     {
@@ -51,20 +62,14 @@ int main(string[] args)
 
     auto chunks = initialASTs.chunks(options.batch_size);
 
-    //TODO: relace by fold over 8 items (8 == processes)
+    writeln("Merge AST files");
+
     while(chunks.length > 1)
-    {
         chunks = taskPool.amap!mergeFewASTs(chunks).chunks(options.batch_size);
-    }
 
-    auto ret = chunks.front.mergeFewASTs();
+    auto ret = chunks.front.mergeFewASTs(options.out_file);
 
-    "====".writeln;
-    ret.writeln;
-
-    bool wasIgnoredFile;
-
-    return wasIgnoredFile ? 3 : 0;
+    return 0;
 }
 
 import std.process;
@@ -76,7 +81,6 @@ immutable string[] clangArgsBase = [
         "-cc1",
         "-ferror-limit", "1",
         "-triple", "riscv32", // base type sizes is not defined in preprocessed files
-        "-emit-pch",
         "/dev/null", // input code file disabled
         "-o", // next should be ret_filename
 ];
@@ -85,7 +89,7 @@ string createAST(string filename)
 {
     const ret_filename = filename~".ast";
 
-    auto cmdLine = clangArgsBase ~ [ret_filename, filename];
+    auto cmdLine = clangArgsBase ~ ret_filename ~ "-emit-pch" ~ filename;
 
     auto r = execute(args: cmdLine);
 
@@ -95,11 +99,8 @@ string createAST(string filename)
     return ret_filename;
 }
 
-string mergeFewASTs(string[] fileNames)
+string mergeFewASTs(string[] fileNames, const string prettyPrintedFile = null)
 {
-    if(fileNames.length == 1)
-        return fileNames[0]; // skip latest bogus run
-
     import core.atomic;
 
     shared static size_t batchNum;
@@ -108,10 +109,17 @@ string mergeFewASTs(string[] fileNames)
     shared static size_t fileNum;
     const size_t currFileNum = fileNum.atomicOp!"+="(fileNames.length);
 
-    const ret_filename = "/tmp/remove_me_"~currBatchNum.to!string~".ast";
+    const ret_filename = prettyPrintedFile
+        ? prettyPrintedFile
+        : "/tmp/remove_me_"~currBatchNum.to!string~".ast";
+
     const astMergeArgs = fileNames.map!(f => ["-ast-merge", f]).join.array;
 
-    auto cmdLine = clangArgsBase ~ ret_filename ~ astMergeArgs;
+    auto cmdLine =
+        clangArgsBase
+        ~ret_filename
+        ~(prettyPrintedFile is null ? "-emit-pch" : "-ast-print")
+        ~ astMergeArgs;
 
     writeln("Merge AST batch #", currBatchNum);
     cmdLine.join(" ").writeln;
