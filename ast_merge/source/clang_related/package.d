@@ -9,31 +9,45 @@ TranslationUnit parseFile(string filename, in string[] args)
           TranslationUnitFlags.SkipFunctionBodies
         | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles;
 
-    return parse(filename, args, flags);
+    return parse(filename, args); //, flags);
 }
 
 /*private*/ Cursor*[string] addedDecls;
 
-Cursor* checkAndAdd(ref Cursor cur)
+void checkAndAdd(ref Cursor cur)
 {
-    return addedDecls.getOrAdd!(() => &cur)(cur.spelling);
-}
+    auto found = (cur.spelling in addedDecls);
 
-private:
-
-import std.traits: isAssociativeArray;
-
-private auto getOrAdd(alias factory, AA, I)(ref AA arr, I idx)
-if(isAssociativeArray!AA)
-{
-    auto found = (idx in arr);
+    import std.stdio;
 
     if(found is null)
     {
-        auto v = factory();
-        arr[idx] = v;
-        found = (idx in arr);
-    }
+        writeln(cur, " not found");
 
-    return *found;
+        addedDecls[cur.spelling] = &cur;
+    }
+    else
+    {
+        writeln("Check ", cur, **found);
+
+        const s1 = cur.getPrinted;
+        const s2 = (**found).getPrinted;
+
+        if(s1 != s2)
+        {
+            throw new Exception(cur.toString~" is not equal to previously saved "~(*found).toString~"\n"
+                    ~s1~"\n"
+                    ~s2~"\n"
+                );
+        }
+    }
+}
+
+private string getPrinted(ref Cursor cur)
+{
+    import clang.c.index;
+
+    //~ CXPrintingPolicyProperty props;
+
+    return cur.cx.clang_getCursorPrettyPrinted(null).toString;
 }

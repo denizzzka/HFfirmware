@@ -62,6 +62,10 @@ int main(string[] args)
     units
         .map!(a => a.cursor)
         .map!(a => a.children).joiner
+
+        //~ .map!(a => a.displayName)
+        //~ .each!writeln;
+
         .each!checkAndAdd;
 
         //~ .map!(a => a.spelling)
