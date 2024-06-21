@@ -57,7 +57,27 @@ int main(string[] args)
 
     const includes = options.include_files.map!(a => ["-include", a]).join.array;
 
-    auto unit = filenames.front.parseFile(includes);
+    auto units = filenames.map!(a => parseFile(a, includes));
+
+    units
+        .map!(a => a.cursor)
+        .map!(a => a.children).joiner
+        .each!checkAndAdd;
+
+        //~ .map!(a => a.spelling)
+        //~ .each!writeln;
+
+    "======".writeln;
+
+    addedDecls.byKey.each!writeln;
+
+    //~ foreach(ref cur; unit.cursor.children)
+    //~ {
+        //~ cur.writeln();
+        //~ unit.cursor.kind.writeln();
+        //~ unit.cursor.type.writeln();
+        //~ unit.cursor.children.each!writeln();
+    //~ }
 
     assert(false);
 
