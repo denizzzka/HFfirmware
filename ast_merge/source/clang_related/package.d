@@ -43,15 +43,16 @@ void checkAndAdd(ref Cursor cur)
     {
         writeln("Check ", cur, **found);
 
-        const _old = cur.getCursorForCmp; //.getPrinted;
-        const _new = (**found).getCursorForCmp; //.getPrinted;
+        const _old = cur.getCursorForCmp;
+        const _new = (**found).getCursorForCmp;
 
         if(_old != _new)
         {
-            throw new Exception("New cursor is not equal to previously saved:\n"
-                    ~"old: "~_old.toString~" "~_old.underlyingType.to!string~"\n"
-                    ~"new: "~_new.toString~" "~_new.underlyingType.to!string
-                );
+            throw new Exception(
+                "New cursor is not equal to previously saved:\n"
+                ~"Old:\n"~_old.getPrinted~"\n"
+                ~"New:\n"~_new.getPrinted
+            );
         }
     }
 }
@@ -66,7 +67,7 @@ private auto getCursorForCmp(ref Cursor c)
     return c.canonical;
 }
 
-private string getPrinted(ref Cursor cur)
+private string getPrinted(in Cursor cur)
 {
     import clang.c.index;
 
