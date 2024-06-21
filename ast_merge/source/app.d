@@ -8,6 +8,7 @@ struct CliOptions
 {
     string out_file;
     string[] include_files;
+    string[] clang_opts;
     size_t batch_size = 1;
     uint threads = 1;
 }
@@ -23,6 +24,7 @@ int main(string[] args)
         auto helpInformation = getopt(args,
             "output", `Output file`, &options.out_file,
             "include", `Additional include files`, &options.include_files,
+            "clang_opts", `Clang options`, &options.clang_opts,
             "batch_size", `batch_size`, &options.batch_size,
             "threads", `threads`, &options.threads,
         );
