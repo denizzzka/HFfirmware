@@ -66,6 +66,7 @@ int main(string[] args)
         .map!(a => a.children)
         .joiner
         .filter!(a => a.isCanonical)
+        //TODO: add .isFileScope filter
 
         //~ .map!(a => a.displayName)
         //~ .each!writeln;

@@ -7,8 +7,8 @@ TranslationUnit parseFile(string filename, in string[] args)
 {
     enum flags =
           TranslationUnitFlags.SkipFunctionBodies
-        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles
-        | TranslationUnitFlags.KeepGoing; //Do not stop processing when fatal errors are encountered
+        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles;
+        //~ | TranslationUnitFlags.KeepGoing; //Do not stop processing when fatal errors are encountered
 
     return parse(filename, args); //, flags);
 }
@@ -42,12 +42,25 @@ void checkAndAdd(ref Cursor cur)
     }
     else
     {
-        writeln("Check ", cur, **found);
+        writeln("Check found:\n", cur, "\n", **found);
 
-        const _old = cur.getCursorForCmp.getPrinted;
-        const _new = (**found).getCursorForCmp.getPrinted;
+        Cursor newCur = cur;
+        const needReplaceDeclByDef = (!(*found).isDefinition && cur.isDefinition);
 
-        if(_old != _new)
+        if(!(*found).isDefinition)
+            newCur = cur.type.declaration;
+
+        Cursor _old = (**found).getCursorForCmp;
+        Cursor _new = newCur.getCursorForCmp;
+
+        writeln("Compares:\n", _new, "\n", _old);
+
+        if(_old == _new)
+        {
+            if(needReplaceDeclByDef)
+                addedDecls[key] = &cur;
+        }
+        else
         {
             const osr = cur.getSourceRange;
             const nsr = (**found).getSourceRange;
@@ -55,9 +68,9 @@ void checkAndAdd(ref Cursor cur)
             throw new Exception(
                 "New cursor is not equal to previously saved:\n"
                 ~"Old: "~osr.fileLinePrettyString~"\n"
-                ~_old~"\n"
-                ~"New: "~osr.fileLinePrettyString~"\n"
-                ~_new
+                ~_old.getPrinted~"\n"
+                ~"New: "~nsr.fileLinePrettyString~"\n"
+                ~_new.getPrinted
             );
         }
     }
