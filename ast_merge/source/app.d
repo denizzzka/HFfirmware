@@ -61,7 +61,9 @@ int main(string[] args)
 
     units
         .map!(a => a.cursor)
-        .map!(a => a.children).joiner
+        .map!(a => a.children)
+        .joiner
+        .filter!(a => a.isCanonical)
 
         //~ .map!(a => a.displayName)
         //~ .each!writeln;

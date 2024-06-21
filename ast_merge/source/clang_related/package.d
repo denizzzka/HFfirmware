@@ -1,7 +1,7 @@
 module clang_related;
 
-//~ import clang.c.index: CXType_Pointer;
 import clang;
+import std.conv: to;
 
 TranslationUnit parseFile(string filename, in string[] args)
 {
@@ -12,11 +12,24 @@ TranslationUnit parseFile(string filename, in string[] args)
     return parse(filename, args); //, flags);
 }
 
-/*private*/ Cursor*[string] addedDecls;
+private struct Key
+{
+    bool isElaborated;
+    string name;
+}
+
+/*private*/ Cursor*[Key] addedDecls;
 
 void checkAndAdd(ref Cursor cur)
 {
-    auto found = (cur.spelling in addedDecls);
+    assert(cur.isCanonical);
+
+    import std.stdio;
+    cur.underlyingType.writeln;
+
+    Key key = { name: cur.spelling, isElaborated: cur.underlyingType != Type.init };
+
+    auto found = (key in addedDecls);
 
     import std.stdio;
 
@@ -24,23 +37,33 @@ void checkAndAdd(ref Cursor cur)
     {
         writeln(cur, " not found");
 
-        addedDecls[cur.spelling] = &cur;
+        addedDecls[key] = &cur;
     }
     else
     {
         writeln("Check ", cur, **found);
 
-        const s1 = cur.getPrinted;
-        const s2 = (**found).getPrinted;
+        const _old = cur.getCursorForCmp; //.getPrinted;
+        const _new = (**found).getCursorForCmp; //.getPrinted;
 
-        if(s1 != s2)
+        if(_old != _new)
         {
-            throw new Exception(cur.toString~" is not equal to previously saved "~(*found).toString~"\n"
-                    ~s1~"\n"
-                    ~s2~"\n"
+            throw new Exception("New cursor is not equal to previously saved:\n"
+                    ~"old: "~_old.toString~" "~_old.underlyingType.to!string~"\n"
+                    ~"new: "~_new.toString~" "~_new.underlyingType.to!string
                 );
         }
     }
+}
+
+private auto getCursorForCmp(ref Cursor c)
+{
+    auto d = c.definition;
+
+    if(!d.isNull)
+        return d;
+
+    return c.canonical;
 }
 
 private string getPrinted(ref Cursor cur)
