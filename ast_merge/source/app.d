@@ -53,6 +53,14 @@ int main(string[] args)
 
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf?
 
+    import clang_related;
+
+    const includes = options.include_files.map!(a => ["-include", a]).join.array;
+
+    auto unit = filenames.front.parseFile(includes);
+
+    assert(false);
+
     writeln("Prepare AST files from code files");
     auto initialASTs = taskPool.amap!createAST(filenames).array;
 
