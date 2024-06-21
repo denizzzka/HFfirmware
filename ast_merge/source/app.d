@@ -65,8 +65,8 @@ int main(string[] args)
         .map!(a => a.cursor)
         .map!(a => a.children)
         .joiner
-        .filter!(a => a.isCanonical)
-        //TODO: add .isFileScope filter
+        //~ .filter!(a => a.isCanonical)
+        //TODO: add .isFileScope filter?
 
         //~ .map!(a => a.displayName)
         //~ .each!writeln;
@@ -78,7 +78,7 @@ int main(string[] args)
 
     "======".writeln;
 
-    addedDecls.byKey.each!writeln;
+    addedDecls.byValue.map!(a => (*a).getPrettyPrinted).each!writeln;
 
     //~ foreach(ref cur; unit.cursor.children)
     //~ {

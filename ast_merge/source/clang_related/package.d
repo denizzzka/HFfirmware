@@ -7,8 +7,8 @@ TranslationUnit parseFile(string filename, in string[] args)
 {
     enum flags =
           TranslationUnitFlags.SkipFunctionBodies
-        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles;
-        //~ | TranslationUnitFlags.KeepGoing; //Do not stop processing when fatal errors are encountered
+        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles
+        | TranslationUnitFlags.KeepGoing; //Do not stop processing when fatal errors are encountered
 
     return parse(filename, args); //, flags);
 }
@@ -23,8 +23,6 @@ private struct Key
 
 void checkAndAdd(ref Cursor cur)
 {
-    assert(cur.isCanonical);
-
     import std.stdio;
     cur.underlyingType.writeln;
 
@@ -42,7 +40,7 @@ void checkAndAdd(ref Cursor cur)
     }
     else
     {
-        writeln("Check found:\n", cur, "\n", **found);
+        writeln(">>>> Check found:\n", cur, "\n", **found);
 
         Cursor newCur = cur;
         const needReplaceDeclByDef = (!(*found).isDefinition && cur.isDefinition);
@@ -53,7 +51,7 @@ void checkAndAdd(ref Cursor cur)
         Cursor _old = (**found).getCursorForCmp;
         Cursor _new = newCur.getCursorForCmp;
 
-        writeln("Compares:\n", _new, "\n", _old);
+        writeln("Compares:\n", _new, "\n", _old, "\nneed replace=", needReplaceDeclByDef);
 
         if(_old == _new)
         {
@@ -68,9 +66,11 @@ void checkAndAdd(ref Cursor cur)
             throw new Exception(
                 "New cursor is not equal to previously saved:\n"
                 ~"Old: "~osr.fileLinePrettyString~"\n"
-                ~_old.getPrinted~"\n"
+                ~_old.getPrettyPrinted~"\n"
                 ~"New: "~nsr.fileLinePrettyString~"\n"
-                ~_new.getPrinted
+                ~_new.getPrettyPrinted~"\n"
+                ~(*found).toString~"\n"
+                ~cur.toString
             );
         }
     }
@@ -86,7 +86,7 @@ private auto getCursorForCmp(ref Cursor c)
     return c.canonical;
 }
 
-private string getPrinted(in Cursor cur)
+string getPrettyPrinted(in Cursor cur)
 {
     import clang.c.index;
 
