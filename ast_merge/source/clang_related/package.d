@@ -27,7 +27,7 @@ void checkAndAdd(ref Cursor cur)
     import std.stdio;
     cur.underlyingType.writeln;
 
-    Key key = { name: cur.spelling, isElaborated: cur.underlyingType != Type.init };
+    Key key = { name: cur.spelling, isElaborated: cur.underlyingType.isInvalid };
 
     auto found = (key in addedDecls);
 
