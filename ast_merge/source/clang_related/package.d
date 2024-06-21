@@ -7,7 +7,8 @@ TranslationUnit parseFile(string filename, in string[] args)
 {
     enum flags =
           TranslationUnitFlags.SkipFunctionBodies
-        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles;
+        | TranslationUnitFlags.IgnoreNonErrorsFromIncludedFiles
+        | TranslationUnitFlags.KeepGoing; //Do not stop processing when fatal errors are encountered
 
     return parse(filename, args); //, flags);
 }
@@ -43,15 +44,20 @@ void checkAndAdd(ref Cursor cur)
     {
         writeln("Check ", cur, **found);
 
-        const _old = cur.getCursorForCmp;
-        const _new = (**found).getCursorForCmp;
+        const _old = cur.getCursorForCmp.getPrinted;
+        const _new = (**found).getCursorForCmp.getPrinted;
 
         if(_old != _new)
         {
+            const osr = cur.getSourceRange;
+            const nsr = (**found).getSourceRange;
+
             throw new Exception(
                 "New cursor is not equal to previously saved:\n"
-                ~"Old:\n"~_old.getPrinted~"\n"
-                ~"New:\n"~_new.getPrinted
+                ~"Old: "~osr.fileLinePrettyString~"\n"
+                ~_old~"\n"
+                ~"New: "~osr.fileLinePrettyString~"\n"
+                ~_new
             );
         }
     }
@@ -71,7 +77,19 @@ private string getPrinted(in Cursor cur)
 {
     import clang.c.index;
 
-    //~ CXPrintingPolicyProperty props;
-
     return cur.cx.clang_getCursorPrettyPrinted(null).toString;
+}
+
+private auto getSourceRange(in Cursor c)
+{
+    import clang.c.index;
+
+    //TODO: make libclang _sourceRangeCreate public
+
+    return SourceRange(clang_getCursorExtent(c.cx));
+}
+
+private string fileLinePrettyString(in SourceRange r)
+{
+    return r.path~":"~r.start.line.to!string~":"~r.start.column.to!string;
 }
