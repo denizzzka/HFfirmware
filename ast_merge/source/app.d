@@ -61,6 +61,28 @@ int main(string[] args)
 
     auto units = filenames.map!(a => parseFile(a, includes));
 
+    import clang;
+
+    //~ ChildVisitResult visitCh(Cursor cur, Cursor parent)
+    //~ {
+        //~ writeln("Visited cur ", cur);
+
+        //~ if(cur.kind == Cursor.Kind.FunctionDecl)
+        //~ {
+            //~ writeln(" >>> ", cur.toString);
+
+            //~ return ChildVisitResult.Recurse;
+        //~ }
+
+        //~ cur.getPrettyPrinted.writeln;
+
+        //~ return ChildVisitResult.Continue;
+    //~ }
+
+    //~ units.front.cursor.visitChildren(&visitCh);
+
+    //~ assert(false);
+
     units
         .map!(a => a.cursor)
         .map!(a => a.children)
@@ -78,7 +100,8 @@ int main(string[] args)
 
     "======".writeln;
 
-    addedDecls.byValue.map!(a => (*a).getPrettyPrinted).each!writeln;
+    addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
+    addedDecls.byValue.map!(a => a.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
     //~ foreach(ref cur; unit.cursor.children)
     //~ {

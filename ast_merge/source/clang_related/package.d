@@ -19,11 +19,14 @@ private struct Key
     string name;
 }
 
-/*private*/ Cursor*[Key] addedDecls;
+/*private*/ Cursor[Key] addedDecls;
+
+import std.stdio;
 
 void checkAndAdd(ref Cursor cur)
 {
-    import std.stdio;
+    import std.algorithm.comparison: equal;
+
     cur.underlyingType.writeln;
 
     Key key = { name: cur.spelling, isElaborated: cur.underlyingType.isInvalid };
@@ -36,54 +39,83 @@ void checkAndAdd(ref Cursor cur)
     {
         writeln(cur, " not found");
 
-        addedDecls[key] = &cur;
+        addedDecls[key] = cur;
+    }
+    else
+        cmpCursors(key, *found, cur);
+}
+
+private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
+{
+    writeln(">>>> Check found:\n", old_orig, "\n", new_orig);
+
+    const needCompareDefs = old_orig.isDefinition || new_orig.isDefinition;
+    const needReplaceDeclByDef = (!old_orig.isDefinition && new_orig.isDefinition);
+
+    Cursor _old;
+    Cursor _new;
+
+    if(needCompareDefs)
+    {
+        _old = old_orig.definition;
+        _new = new_orig.definition;
     }
     else
     {
-        writeln(">>>> Check found:\n", cur, "\n", **found);
+        _old = old_orig;
+        _new = new_orig;
+    }
 
-        Cursor newCur = cur;
-        const needReplaceDeclByDef = (!(*found).isDefinition && cur.isDefinition);
+    writeln("Compares:\n", new_orig, "\n", old_orig, "\nneed replace=", needReplaceDeclByDef);
 
-        if(!(*found).isDefinition)
-            newCur = cur.type.declaration;
+    const oldHash = _old.calcIndependentHash;
+    const newHash = _new.calcIndependentHash;
 
-        Cursor _old = (**found).getCursorForCmp;
-        Cursor _new = newCur.getCursorForCmp;
+    if(oldHash == newHash)
+    {
+        if(needReplaceDeclByDef)
+            addedDecls[key] = new_orig;
+    }
+    else
+    {
+        const osr = old_orig.getSourceRange;
+        const nsr = new_orig.getSourceRange;
 
-        writeln("Compares:\n", _new, "\n", _old, "\nneed replace=", needReplaceDeclByDef);
-
-        if(_old == _new)
-        {
-            if(needReplaceDeclByDef)
-                addedDecls[key] = &cur;
-        }
-        else
-        {
-            const osr = cur.getSourceRange;
-            const nsr = (**found).getSourceRange;
-
-            throw new Exception(
-                "New cursor is not equal to previously saved:\n"
-                ~"Old: "~osr.fileLinePrettyString~"\n"
-                ~_old.getPrettyPrinted~"\n"
-                ~"New: "~nsr.fileLinePrettyString~"\n"
-                ~_new.getPrettyPrinted~"\n"
-                ~(*found).toString~"\n"
-                ~cur.toString
-            );
-        }
+        throw new Exception(
+            "New cursor is not equal to previously saved:\n"
+            ~"Old: "~osr.fileLinePrettyString~"\n"
+            ~old_orig.getPrettyPrinted~"\n"
+            ~"New: "~nsr.fileLinePrettyString~"\n"
+            ~new_orig.getPrettyPrinted~"\n"
+            ~old_orig.toString~"\n"
+            ~new_orig.toString~"\n"
+            ~"Hash old: "~oldHash.to!string~"\n"
+            ~"Hash new: "~newHash.to!string
+        );
     }
 }
 
-private auto getCursorForCmp(ref Cursor c)
+private auto calcIndependentHash(in Cursor c)
 {
-    auto d = c.definition;
+    import clang.c.index;
+    import std.digest.murmurhash;
+    import std.string;
+    import std.stdio;
 
-    if(!d.isNull)
-        return d;
+    MurmurHash3!(128, 64) acc;
 
-    return c.canonical;
+    ChildVisitResult calcHash(in Cursor cur, in Cursor parent)
+    {
+        acc.put(cur.toString.representation);
+        acc.put(cur.toString.representation);
+
+        return ChildVisitResult.Recurse;
+    }
+
+    calcHash(c, c);
+    c.visitChildren(&calcHash);
+
+    return acc.finish();
 }
 
 string getPrettyPrinted(in Cursor cur)
