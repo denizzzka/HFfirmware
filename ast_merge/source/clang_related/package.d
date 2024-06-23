@@ -56,15 +56,13 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         _new = new_orig;
     }
 
-    const oldHash = _old.calcIndependentHash;
-    const newHash = _new.calcIndependentHash;
+    const ignoreArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition)
+        || key.kind == Cursor.Kind.TypedefDecl;
 
-    bool succCmp;
+    const oldHash = _old.calcIndependentHash(ignoreArgsNames);
+    const newHash = _new.calcIndependentHash(ignoreArgsNames);
 
-    if(key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition)
-        succCmp = (_old.type.spelling == _new.type.spelling);
-    else
-        succCmp = (oldHash == newHash);
+    const succCmp = (oldHash == newHash);
 
     if(!succCmp)
     {
@@ -93,7 +91,7 @@ private bool funcDeclarationsEqual(in Cursor f1, in Cursor f2)
     return f1.spelling == f2.spelling;
 }
 
-private auto calcIndependentHash(in Cursor c)
+private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 {
     import clang.c.index;
     import std.digest.murmurhash;
@@ -104,8 +102,15 @@ private auto calcIndependentHash(in Cursor c)
 
     ChildVisitResult calcHash(in Cursor cur, in Cursor parent)
     {
-        acc.put(cur.toString.representation);
-        acc.put(cur.toString.representation);
+        if(cur.kind == Cursor.Kind.ParmDecl && ignoreArgNames)
+        {
+            auto t = Type(cur.type);
+            auto c = Cursor(c.kind, "", t);
+
+            acc.put(c.toString.representation);
+        }
+        else
+            acc.put(cur.toString.representation);
 
         return ChildVisitResult.Recurse;
     }
