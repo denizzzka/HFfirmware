@@ -24,15 +24,34 @@ private struct Key
 
 version(DebugOutput)  import std.stdio;
 
+private bool[string][Cursor.Kind] ignoredDecls;
+
+private void fillAA(Cursor.Kind kind, string[] names)
+{
+    import std.algorithm;
+
+    bool[string] namesAA;
+    names.each!(a => namesAA[a] = true);
+    ignoredDecls[kind] = namesAA;
+}
+
+shared static this()
+{
+    with(Cursor.Kind)
+    {
+        fillAA(StaticAssert,    [""]);
+        fillAA(VarDecl,         ["TAG"]);
+        fillAA(StructDecl,      ["sigaction"]);
+    }
+
+    ignoredDecls.rehash;
+}
+
 void checkAndAdd(ref Cursor cur)
 {
     import std.algorithm.comparison: equal;
 
     version(DebugOutput) cur.underlyingType.writeln;
-
-    // Ignored
-    if(cur.kind == Cursor.Kind.StaticAssert)
-        return;
 
     Key key = { name: cur.spelling, kind: cur.kind, isDefinition: cur.isDefinition };
 
@@ -70,6 +89,15 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
 
     if(!succCmp)
     {
+        auto ignored = (key.kind in ignoredDecls);
+        if(ignored !is null)
+        {
+            auto mathed = (_old.spelling in (*ignored));
+
+            // we are on ignored cursor?
+            if(mathed !is null) return;
+        }
+
         const osr = old_orig.getSourceRange;
         const nsr = new_orig.getSourceRange;
 
