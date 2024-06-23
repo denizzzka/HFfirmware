@@ -30,6 +30,10 @@ void checkAndAdd(ref Cursor cur)
 
     version(DebugOutput) cur.underlyingType.writeln;
 
+    // Ignored
+    if(cur.kind == Cursor.Kind.StaticAssert)
+        return;
+
     Key key = { name: cur.spelling, kind: cur.kind, isDefinition: cur.isDefinition };
 
     auto found = (key in addedDecls);
