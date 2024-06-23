@@ -42,6 +42,7 @@ shared static this()
         fillAA(StaticAssert,    [""]);
         fillAA(VarDecl,         ["TAG"]);
         fillAA(StructDecl,      ["sigaction"]);
+        fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
     }
 
     ignoredDecls.rehash;
@@ -92,10 +93,12 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         auto ignored = (key.kind in ignoredDecls);
         if(ignored !is null)
         {
-            auto mathed = (_old.spelling in (*ignored));
+            bool mathed =
+                ((_old.spelling in *ignored) !is null) ||
+                (("##ANY##" in *ignored) !is null);
 
             // we are on ignored cursor?
-            if(mathed !is null) return;
+            if(mathed) return;
         }
 
         const osr = old_orig.getSourceRange;
