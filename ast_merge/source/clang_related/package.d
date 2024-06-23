@@ -15,21 +15,35 @@ TranslationUnit parseFile(string filename, in string[] args)
 
 private struct Key
 {
-    bool isElaborated;
+    enum Kind
+    {
+        Variable, // or struct or type
+        Function,
+        Elaborated,
+    }
+
+    Kind kind;
     string name;
 }
 
 /*private*/ Cursor[Key] addedDecls;
 
-import std.stdio;
+version(DebugOutput)  import std.stdio;
 
 void checkAndAdd(ref Cursor cur)
 {
     import std.algorithm.comparison: equal;
 
-    cur.underlyingType.writeln;
+    version(DebugOutput) cur.underlyingType.writeln;
 
-    Key key = { name: cur.spelling, isElaborated: cur.underlyingType.isInvalid };
+    Key.Kind kind;
+
+    if(cur.kind == Cursor.Kind.FunctionDecl)
+        kind = Key.Kind.Function;
+    else if(cur.underlyingType.isInvalid)
+        kind = Key.Kind.Elaborated;
+
+    Key key = { name: cur.spelling, kind: kind };
 
     auto found = (key in addedDecls);
 
@@ -47,7 +61,7 @@ void checkAndAdd(ref Cursor cur)
 
 private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
 {
-    writeln(">>>> Check found:\n", old_orig, "\n", new_orig);
+    version(DebugOutput) writeln(">>>> Check found:\n", old_orig, "\n", new_orig);
 
     const needCompareDefs = old_orig.isDefinition || new_orig.isDefinition;
     const needReplaceDeclByDef = (!old_orig.isDefinition && new_orig.isDefinition);
@@ -66,7 +80,7 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         _new = new_orig;
     }
 
-    writeln("Compares:\n", new_orig, "\n", old_orig, "\nneed replace=", needReplaceDeclByDef);
+    version(DebugOutput) writeln("Compares:\n", new_orig, "\n", old_orig, "\nneed replace=", needReplaceDeclByDef);
 
     const oldHash = _old.calcIndependentHash;
     const newHash = _new.calcIndependentHash;
@@ -87,8 +101,8 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
             ~old_orig.getPrettyPrinted~"\n"
             ~"New: "~nsr.fileLinePrettyString~"\n"
             ~new_orig.getPrettyPrinted~"\n"
-            ~old_orig.toString~"\n"
-            ~new_orig.toString~"\n"
+            ~"Old orig cursor: "~old_orig.toString~"\n"
+            ~"New orig cursor: "~new_orig.toString~"\n"
             ~"Hash old: "~oldHash.to!string~"\n"
             ~"Hash new: "~newHash.to!string
         );
