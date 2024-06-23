@@ -59,7 +59,7 @@ int main(string[] args)
 
     const includes = options.include_files.map!(a => ["-include", a]).join.array;
 
-    auto units = filenames.map!(a => parseFile(a, includes));
+    auto units = filenames.map!(a => parseFile(a, options.clang_opts ~ includes));
 
     import clang;
 
