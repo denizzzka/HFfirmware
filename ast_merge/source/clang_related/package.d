@@ -52,6 +52,9 @@ shared static this()
                 "esp_log_buffer_char",
                 "is_valid_host",
                 "spi_intr",
+                "xTimerCreateTimerTask",
+                "lookup_cmd_handler",
+                "efuse_ll_set_pgm_cmd",
             ]
         );
         fillAA(VarDecl,
@@ -60,7 +63,7 @@ shared static this()
                 "SPI_TAG",
                 "spihost",
                 "s_platform",
-                //~ "esp_tls_cfg",
+                "cmd_table",
             ]
         );
     }
@@ -83,11 +86,9 @@ void checkAndAdd(ref Cursor cur)
 
     auto found = (key in addedDecls);
 
-    import std.stdio;
-
     if(found is null)
     {
-        writeln(cur, " not found");
+        version(DebugOutput) writeln(cur, " not found");
 
         addedDecls[key] = cur;
     }
@@ -130,7 +131,7 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         const osr = old_orig.getSourceRange;
         const nsr = new_orig.getSourceRange;
 
-        throw new Exception(
+        throw new DifferentCursorsException(old_orig, new_orig,
             "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.getPrettyPrinted~"\n"
@@ -145,6 +146,18 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     }
 }
 
+private class DifferentCursorsException : Exception
+{
+    Cursor c1;
+    Cursor c2;
+
+    this(Cursor c1, Cursor c2, string msg)
+    {
+        super(msg);
+    }
+}
+
+version(DebugOutput)
 private auto deepCmpCursors(in Cursor c1, in Cursor c2)
 {
     Cursor[] r1;
@@ -152,8 +165,6 @@ private auto deepCmpCursors(in Cursor c1, in Cursor c2)
 
     c1.visitRecursive((c, p) { r1 ~= c; });
     c2.visitRecursive((c, p) { r2 ~= c; });
-
-    import std.stdio;
 
     r1.each!(a => stderr.writeln(a));
     stderr.writeln("=====");
