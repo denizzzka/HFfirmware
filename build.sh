@@ -23,7 +23,7 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --extension "c.i" \
 
 echo "Merging *.i files"
 
-time ./ast_merge/ast_merge --batch_size=10 --threads=8 --include=importc.h --output ./preprocessed/processed_for_dpp.c < preprocessed_files_list.txt
+time ./ast_merge/ast_merge --clang_opts="--target=riscv32" --batch_size=10 --threads=8 --include=importc.h --output ./preprocessed/processed_for_dpp.c < preprocessed_files_list.txt
 
 echo "Convert merged C code to .h"
 
