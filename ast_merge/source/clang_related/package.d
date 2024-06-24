@@ -118,14 +118,6 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     }
 }
 
-private bool funcDeclarationsEqual(in Cursor f1, in Cursor f2)
-{
-    assert(!f1.isDefinition);
-    assert(!f2.isDefinition);
-
-    return f1.spelling == f2.spelling;
-}
-
 private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 {
     import clang.c.index;
@@ -137,6 +129,12 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 
     ChildVisitResult calcHash(in Cursor cur, in Cursor parent)
     {
+    //~ import std.stdio;
+    //~ writeln("calh hash of ", cur);
+
+    with(Cursor.Kind)
+    {
+        //~ writeln(cur);
         if(cur.kind == Cursor.Kind.ParmDecl && ignoreArgNames)
         {
             auto t = Type(cur.type);
@@ -144,10 +142,15 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 
             acc.put(c.toString.representation);
         }
+        else if(cur.kind == Cursor.Kind.FirstAttr && parent.kind == Cursor.Kind.FunctionDecl)
+        {
+            // ignore function __attribute__ cursors
+        }
         else
             acc.put(cur.toString.representation);
 
         return ChildVisitResult.Recurse;
+    }
     }
 
     calcHash(c, c);
