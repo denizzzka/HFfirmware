@@ -83,7 +83,7 @@ int main(string[] args)
 
     //~ assert(false);
 
-    Cursor[IndependentHash][Key] problemCursors;
+    CursorDescr[][Key] problemCursors;
 
     void addAndProcessErorrs(ref Cursor c)
     {
@@ -91,24 +91,15 @@ int main(string[] args)
             checkAndAdd(c);
         catch(DifferentCursorsException e)
         {
-            writeln("err catched!");
-            throw e;
+            auto found = (e.key in problemCursors);
 
-            //~ auto found = (e.key in problemCursors);
-
-            //~ if(found)
-            //~ {
-                //~ (*found)[e.h1] = e.c1;
-                //~ (*found)[e.h2] = e.c2;
-            //~ }
-            //~ else
-            //~ {
-                //~ Cursor[IndependentHash] aa;
-                //~ aa[e.h1] = e.c1;
-                //~ aa[e.h2] = e.c2;
-
-                //~ problemCursors[e.key] = aa;
-            //~ }
+            if(found)
+            {
+                (*found) ~= e.c1;
+                (*found) ~= e.c2;
+            }
+            else
+                problemCursors[e.key] = [e.c1, e.c2];
         }
     }
 
@@ -132,9 +123,9 @@ int main(string[] args)
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
     addedDecls.byValue.map!(a => a.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
-    //~ "Problems:".writeln;
+    "Problems:".writeln;
 
-    problemCursors.byKey.each!(a => a.writeln);
+    problemCursors.byKey.map!(a => problemCursors[a]).joiner.each!(a => a.errMsg.writeln);
 
     //~ foreach(ref cur; unit.cursor.children)
     //~ {

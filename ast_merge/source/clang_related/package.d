@@ -132,7 +132,9 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         const nsr = new_orig.getSourceRange;
 
         throw new DifferentCursorsException(
-            key, old_orig, new_orig, oldHash, newHash,
+            key,
+            CursorDescr(old_orig, oldHash),
+            CursorDescr(new_orig, newHash),
             "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.getPrettyPrinted~"\n"
@@ -147,16 +149,28 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     }
 }
 
+struct CursorDescr
+{
+    Cursor cur;
+    IndependentHash hash;
+    string errMsg;
+}
+
 class DifferentCursorsException : Exception
 {
     Key key;
-    Cursor c1;
-    Cursor c2;
-    IndependentHash h1;
-    IndependentHash h2;
+    CursorDescr c1;
+    CursorDescr c2;
 
-    this(Key key, Cursor c1, Cursor c2, IndependentHash h1, IndependentHash h2, string msg)
+    this(Key key, CursorDescr c1, CursorDescr c2, string msg)
     {
+        this.key = key;
+        this.c1 = c1;
+        this.c2 = c2;
+
+        this.c1.errMsg = msg;
+        this.c2.errMsg = msg;
+
         super(msg);
     }
 }
