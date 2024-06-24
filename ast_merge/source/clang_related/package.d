@@ -145,7 +145,7 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
     import std.stdio;
     writeln("calh hash of ", c);
 
-    ChildVisitResult calcHash(in Cursor cur, in Cursor parent)
+    void calcHash(in Cursor cur, in Cursor parent)
     {
     with(Cursor.Kind)
     {
@@ -163,13 +163,11 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
         }
         else
             acc.put(cur.toString.representation);
-
-        return ChildVisitResult.Recurse;
     }
     }
 
     calcHash(c, c);
-    c.visitChildren(&calcHash);
+    c.visitRecursive(&calcHash);
 
     return acc.finish();
 }
@@ -193,4 +191,15 @@ private auto getSourceRange(in Cursor c)
 private string fileLinePrettyString(in SourceRange r)
 {
     return r.path~":"~r.start.line.to!string~":"~r.start.column.to!string;
+}
+
+void visitRecursive(const ref Cursor cursor, scope void delegate(Cursor cursor, Cursor parent) visitor) @safe
+{
+    ChildVisitResult internalVisitor(Cursor c, Cursor parent)
+    {
+        visitor(c, parent);
+        return ChildVisitResult.Recurse;
+    }
+
+    cursor.visitChildren(&internalVisitor);
 }
