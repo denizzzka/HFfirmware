@@ -4,6 +4,7 @@ import clang;
 import std.algorithm;
 import std.array;
 import std.conv: to;
+import std.range;
 
 TranslationUnit parseFile(string filename, in string[] args)
 {
@@ -43,7 +44,6 @@ shared static this()
     with(Cursor.Kind)
     {
         fillAA(StaticAssert,    [""]);
-        fillAA(VarDecl,         ["TAG", "SPI_TAG"]);
         fillAA(StructDecl,      ["sigaction"]);
         fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
         fillAA(FunctionDecl, //FIXME: remove
@@ -51,6 +51,16 @@ shared static this()
                 "esp_log_buffer_hex",
                 "esp_log_buffer_char",
                 "is_valid_host",
+                "spi_intr",
+            ]
+        );
+        fillAA(VarDecl,
+            [
+                "TAG",
+                "SPI_TAG",
+                "spihost",
+                "s_platform",
+                //~ "esp_tls_cfg",
             ]
         );
     }
@@ -100,7 +110,7 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     const oldHash = _old.calcIndependentHash(ignoreFuncArgsNames);
     const newHash = _new.calcIndependentHash(ignoreFuncArgsNames);
 
-    const succCmp = ignoreFuncArgsNames || (oldHash == newHash);
+    const succCmp = ignoreFuncArgsNames || (oldHash == newHash) || (_old.getPrettyPrinted == _new.getPrettyPrinted);
 
     if(!succCmp)
     {
@@ -114,6 +124,8 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
             // we are on ignored cursor?
             if(mathed) return;
         }
+
+        //~ deepCmpCursors(_old, _new);
 
         const osr = old_orig.getSourceRange;
         const nsr = new_orig.getSourceRange;
@@ -133,6 +145,21 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     }
 }
 
+private auto deepCmpCursors(in Cursor c1, in Cursor c2)
+{
+    Cursor[] r1;
+    Cursor[] r2;
+
+    c1.visitRecursive((c, p) { r1 ~= c; });
+    c2.visitRecursive((c, p) { r2 ~= c; });
+
+    import std.stdio;
+
+    r1.each!(a => stderr.writeln(a));
+    stderr.writeln("=====");
+    r2.each!(a => stderr.writeln(a));
+}
+
 private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 {
     import clang.c.index;
@@ -143,13 +170,13 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
     MurmurHash3!(128, 64) acc;
 
     import std.stdio;
-    writeln("calh hash of ", c);
+    //~ writeln("calh hash of ", c);
 
     void calcHash(in Cursor cur, in Cursor parent)
     {
     with(Cursor.Kind)
     {
-        writeln(cur);
+        //~ writeln(cur);
         if(cur.kind == Cursor.Kind.ParmDecl && ignoreArgNames)
         {
             auto t = Type(cur.type);
