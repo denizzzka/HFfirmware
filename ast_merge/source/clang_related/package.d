@@ -80,13 +80,23 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         _new = new_orig;
     }
 
+    const cmpFuncDeclarations = (key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition && !_new.isDefinition);
+
     const ignoreArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition)
         || key.kind == Cursor.Kind.TypedefDecl;
 
     const oldHash = _old.calcIndependentHash(ignoreArgsNames);
     const newHash = _new.calcIndependentHash(ignoreArgsNames);
 
-    const succCmp = (oldHash == newHash);
+    bool succCmp;
+
+    if(cmpFuncDeclarations)
+    {
+        writeln("compare func decl!");
+        succCmp = (_old.type.toString == _new.type.toString);
+    }
+    else
+        succCmp = (oldHash == newHash);
 
     if(!succCmp)
     {
