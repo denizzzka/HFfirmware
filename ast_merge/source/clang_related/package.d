@@ -16,7 +16,7 @@ TranslationUnit parseFile(string filename, in string[] args)
     return parse(filename, args); //, flags);
 }
 
-private struct Key
+struct Key
 {
     Cursor.Kind kind;
     string[] paramTypes; // for functions
@@ -131,7 +131,8 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         const osr = old_orig.getSourceRange;
         const nsr = new_orig.getSourceRange;
 
-        throw new DifferentCursorsException(old_orig, new_orig,
+        throw new DifferentCursorsException(
+            key, old_orig, new_orig, oldHash, newHash,
             "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.getPrettyPrinted~"\n"
@@ -146,12 +147,15 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
     }
 }
 
-private class DifferentCursorsException : Exception
+class DifferentCursorsException : Exception
 {
+    Key key;
     Cursor c1;
     Cursor c2;
+    IndependentHash h1;
+    IndependentHash h2;
 
-    this(Cursor c1, Cursor c2, string msg)
+    this(Key key, Cursor c1, Cursor c2, IndependentHash h1, IndependentHash h2, string msg)
     {
         super(msg);
     }
@@ -171,7 +175,9 @@ private auto deepCmpCursors(in Cursor c1, in Cursor c2)
     r2.each!(a => stderr.writeln(a));
 }
 
-private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
+alias IndependentHash = ubyte[16];
+
+private IndependentHash calcIndependentHash(in Cursor c, bool ignoreArgNames)
 {
     import clang.c.index;
     import std.digest.murmurhash;

@@ -83,6 +83,35 @@ int main(string[] args)
 
     //~ assert(false);
 
+    Cursor[IndependentHash][Key] problemCursors;
+
+    void addAndProcessErorrs(ref Cursor c)
+    {
+        try
+            checkAndAdd(c);
+        catch(DifferentCursorsException e)
+        {
+            writeln("err catched!");
+            throw e;
+
+            //~ auto found = (e.key in problemCursors);
+
+            //~ if(found)
+            //~ {
+                //~ (*found)[e.h1] = e.c1;
+                //~ (*found)[e.h2] = e.c2;
+            //~ }
+            //~ else
+            //~ {
+                //~ Cursor[IndependentHash] aa;
+                //~ aa[e.h1] = e.c1;
+                //~ aa[e.h2] = e.c2;
+
+                //~ problemCursors[e.key] = aa;
+            //~ }
+        }
+    }
+
     units
         .map!(a => a.cursor)
         .map!(a => a.children)
@@ -93,7 +122,7 @@ int main(string[] args)
         //~ .map!(a => a.displayName)
         //~ .each!writeln;
 
-        .each!checkAndAdd;
+        .each!addAndProcessErorrs;
 
         //~ .map!(a => a.spelling)
         //~ .each!writeln;
@@ -102,6 +131,10 @@ int main(string[] args)
 
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
     addedDecls.byValue.map!(a => a.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
+
+    //~ "Problems:".writeln;
+
+    problemCursors.byKey.each!(a => a.writeln);
 
     //~ foreach(ref cur; unit.cursor.children)
     //~ {
