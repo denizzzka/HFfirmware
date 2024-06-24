@@ -44,7 +44,6 @@ shared static this()
     with(Cursor.Kind)
     {
         fillAA(StaticAssert,    [""]);
-        fillAA(StructDecl,      ["sigaction"]);
         fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
         fillAA(FunctionDecl, //FIXME: remove
             [
@@ -55,6 +54,18 @@ shared static this()
                 "xTimerCreateTimerTask",
                 "lookup_cmd_handler",
                 "efuse_ll_set_pgm_cmd",
+                "read_delta_t_from_efuse", // one is from legacy module
+                "esp_reset_reason_get_hint", // two different sections
+                "esp_system_get_time", // TODO: one of them have "weak" attr and can be ommited automatically
+                "_pmksa_cache_free_entry",
+            ]
+        );
+        fillAA(StructDecl,
+            [
+                "sigaction",
+                "rsn_pmksa_cache_entry",
+                "mbedtls_cipher_info_t",
+                "wpa_eapol_ie_parse",
             ]
         );
         fillAA(VarDecl,
@@ -64,6 +75,8 @@ shared static this()
                 "spihost",
                 "s_platform",
                 "cmd_table",
+                "registered_heaps", // extern and usual struct declarations
+                "default_router_list",
             ]
         );
     }

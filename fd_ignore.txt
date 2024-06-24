@@ -1,1 +1,6 @@
 main/
+**/*_legacy.c.i
+**/mbedtls/
+**/esp_supplicant/src/crypto/tls_mbedtls.c.i
+**/i2c/esp_lcd_panel_io_i2c_v1.c.i
+**/gdbstub.c.i
