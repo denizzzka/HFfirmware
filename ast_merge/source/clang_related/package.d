@@ -1,6 +1,8 @@
 module clang_related;
 
 import clang;
+import std.algorithm;
+import std.array;
 import std.conv: to;
 
 TranslationUnit parseFile(string filename, in string[] args)
@@ -16,6 +18,7 @@ TranslationUnit parseFile(string filename, in string[] args)
 private struct Key
 {
     Cursor.Kind kind;
+    string[] paramTypes; // for functions
     bool isDefinition;
     string name;
 }
@@ -40,9 +43,16 @@ shared static this()
     with(Cursor.Kind)
     {
         fillAA(StaticAssert,    [""]);
-        fillAA(VarDecl,         ["TAG"]);
+        fillAA(VarDecl,         ["TAG", "SPI_TAG"]);
         fillAA(StructDecl,      ["sigaction"]);
         fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
+        fillAA(FunctionDecl, //FIXME: remove
+            [
+                "esp_log_buffer_hex",
+                "esp_log_buffer_char",
+                "is_valid_host",
+            ]
+        );
     }
 
     ignoredDecls.rehash;
@@ -54,7 +64,12 @@ void checkAndAdd(ref Cursor cur)
 
     version(DebugOutput) cur.underlyingType.writeln;
 
-    Key key = { name: cur.spelling, kind: cur.kind, isDefinition: cur.isDefinition };
+    Key key = {
+        name: cur.spelling,
+        kind: cur.kind,
+        paramTypes: cur.type.paramTypes.map!(a => a.spelling.idup).array,
+        isDefinition: cur.isDefinition,
+    };
 
     auto found = (key in addedDecls);
 
@@ -80,23 +95,12 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
         _new = new_orig;
     }
 
-    const cmpFuncDeclarations = (key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition && !_new.isDefinition);
+    const ignoreFuncArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !key.isDefinition);
 
-    const ignoreArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !_old.isDefinition)
-        || key.kind == Cursor.Kind.TypedefDecl;
+    const oldHash = _old.calcIndependentHash(ignoreFuncArgsNames);
+    const newHash = _new.calcIndependentHash(ignoreFuncArgsNames);
 
-    const oldHash = _old.calcIndependentHash(ignoreArgsNames);
-    const newHash = _new.calcIndependentHash(ignoreArgsNames);
-
-    bool succCmp;
-
-    if(cmpFuncDeclarations)
-    {
-        writeln("compare func decl!");
-        succCmp = (_old.type.toString == _new.type.toString);
-    }
-    else
-        succCmp = (oldHash == newHash);
+    const succCmp = ignoreFuncArgsNames || (oldHash == newHash);
 
     if(!succCmp)
     {
@@ -122,6 +126,7 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
             ~new_orig.getPrettyPrinted~"\n"
             ~"Old orig cursor: "~old_orig.toString~"\n"
             ~"New orig cursor: "~new_orig.toString~"\n"
+            ~"Key param types: "~key.paramTypes.to!string~"\n"
             ~"Hash old: "~oldHash.to!string~"\n"
             ~"Hash new: "~newHash.to!string
         );
@@ -137,14 +142,14 @@ private auto calcIndependentHash(in Cursor c, bool ignoreArgNames)
 
     MurmurHash3!(128, 64) acc;
 
+    import std.stdio;
+    writeln("calh hash of ", c);
+
     ChildVisitResult calcHash(in Cursor cur, in Cursor parent)
     {
-    //~ import std.stdio;
-    //~ writeln("calh hash of ", cur);
-
     with(Cursor.Kind)
     {
-        //~ writeln(cur);
+        writeln(cur);
         if(cur.kind == Cursor.Kind.ParmDecl && ignoreArgNames)
         {
             auto t = Type(cur.type);
