@@ -63,26 +63,6 @@ int main(string[] args)
 
     import clang;
 
-    //~ ChildVisitResult visitCh(Cursor cur, Cursor parent)
-    //~ {
-        //~ writeln("Visited cur ", cur);
-
-        //~ if(cur.kind == Cursor.Kind.FunctionDecl)
-        //~ {
-            //~ writeln(" >>> ", cur.toString);
-
-            //~ return ChildVisitResult.Recurse;
-        //~ }
-
-        //~ cur.getPrettyPrinted.writeln;
-
-        //~ return ChildVisitResult.Continue;
-    //~ }
-
-    //~ units.front.cursor.visitChildren(&visitCh);
-
-    //~ assert(false);
-
     CursorDescr[][Key] problemCursors;
 
     void addAndProcessErorrs(ref Cursor c)
@@ -125,35 +105,7 @@ int main(string[] args)
 
     "Problems:".writeln;
 
-    problemCursors.byKey.map!(a => problemCursors[a]).joiner.each!(a => a.errMsg.writeln);
-
-    //~ foreach(ref cur; unit.cursor.children)
-    //~ {
-        //~ cur.writeln();
-        //~ unit.cursor.kind.writeln();
-        //~ unit.cursor.type.writeln();
-        //~ unit.cursor.children.each!writeln();
-    //~ }
-
-    assert(false);
-
-    writeln("Prepare AST files from code files");
-    auto initialASTs = taskPool.amap!createAST(filenames).array;
-
-    static string[] mergeTwoChunks(string[] a, string[] b)
-    {
-        auto s = a~b;
-        return [mergeFewASTs(s)];
-    }
-
-    auto chunks = initialASTs.chunks(options.batch_size);
-
-    writeln("Merge AST files");
-
-    while(chunks.length > 1)
-        chunks = taskPool.amap!mergeFewASTs(chunks).chunks(options.batch_size);
-
-    auto ret = chunks.front.mergeFewASTs(options.out_file);
+    problemCursors.byKey.map!(a => problemCursors[a]).joiner.each!(a => stderr.writeln(a.errMsg));
 
     return 0;
 }
