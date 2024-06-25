@@ -1,3 +1,5 @@
+module main;
+
 import std.algorithm;
 import std.conv: to;
 import std.string: chomp;
@@ -7,6 +9,7 @@ import std.stdio;
 struct CliOptions
 {
     enum ShowExcluded { no, brief, full, };
+    static __gshared CliOptions* _this;
 
     string out_file;
     string[] include_files;
@@ -47,6 +50,11 @@ int main(string[] args)
 
             return 0;
         }
+
+        const string[] includes = options.include_files.map!(a => ["-include", a]).join.array;
+        options.clang_opts ~= includes;
+
+        CliOptions._this = &options;
     }
 
     import std.file: write;
@@ -60,10 +68,11 @@ int main(string[] args)
     const filenames = stdin.byLineCopy.array; //TODO: use asyncBuf?
 
     import clang_related;
+    import std.parallelism;
 
-    const includes = options.include_files.map!(a => ["-include", a]).join.array;
+    static auto parseF(string filename) => parseFile(filename, CliOptions._this.clang_opts);
 
-    auto units = filenames.map!(a => parseFile(a, options.clang_opts ~ includes));
+    auto units = taskPool.amap!parseF(filenames);
 
     import clang;
 
