@@ -63,26 +63,6 @@ int main(string[] args)
 
     import clang;
 
-    CursorDescr[][Key] problemCursors;
-
-    void addAndProcessErorrs(ref Cursor c)
-    {
-        try
-            checkAndAdd(c);
-        catch(DifferentCursorsException e)
-        {
-            auto found = (e.key in problemCursors);
-
-            if(found)
-            {
-                (*found) ~= e.c1;
-                (*found) ~= e.c2;
-            }
-            else
-                problemCursors[e.key] = [e.c1, e.c2];
-        }
-    }
-
     units
         .map!(a => a.cursor)
         .map!(a => a.children)
@@ -93,7 +73,7 @@ int main(string[] args)
         //~ .map!(a => a.displayName)
         //~ .each!writeln;
 
-        .each!addAndProcessErorrs;
+        .each!checkAndAdd;
 
         //~ .map!(a => a.spelling)
         //~ .each!writeln;
@@ -101,11 +81,13 @@ int main(string[] args)
     "======".writeln;
 
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
-    addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
+    //~ addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
-    "Problems:".writeln;
-
-    problemCursors.byKey.map!(a => problemCursors[a]).joiner.each!(a => stderr.writeln(a.errMsg));
+    addedDecls.byKey.
+        map!(a => addedDecls[a])
+        .each!(
+            a => a.isExcluded ? stderr.writeln(a.errMsg) : stdout.writeln(a.cur.getPrettyPrinted)
+        );
 
     return 0;
 }

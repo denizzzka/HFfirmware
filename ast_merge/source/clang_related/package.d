@@ -111,10 +111,10 @@ void checkAndAdd(ref Cursor cur)
         cmpCursors(key, *found, descr);
 }
 
-private void cmpCursors(Key key, CursorDescr old_orig, CursorDescr new_orig)
+private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr new_orig)
 {
     Cursor _old = old_orig.cur;
-    Cursor _new = new_orig.cur;
+    const Cursor _new = new_orig.cur;
 
     const ignoreFuncArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !key.isDefinition);
 
@@ -141,11 +141,7 @@ private void cmpCursors(Key key, CursorDescr old_orig, CursorDescr new_orig)
         const osr = old_orig.cur.getSourceRange;
         const nsr = new_orig.cur.getSourceRange;
 
-        throw new DifferentCursorsException(
-            key,
-            old_orig,
-            new_orig,
-            "New cursor is not equal to previously saved:\n"
+        old_orig.errMsg ~= "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.cur.getPrettyPrinted~"\n"
             ~"New: "~nsr.fileLinePrettyString~"\n"
@@ -154,8 +150,7 @@ private void cmpCursors(Key key, CursorDescr old_orig, CursorDescr new_orig)
             ~"New orig cursor: "~new_orig.cur.toString~"\n"
             ~"Key param types: "~key.paramTypes.to!string~"\n"
             ~"Hash old: "~oldHash.to!string~"\n"
-            ~"Hash new: "~newHash.to!string
-        );
+            ~"Hash new: "~newHash.to!string;
     }
 }
 
