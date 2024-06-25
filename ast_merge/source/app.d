@@ -93,10 +93,10 @@ int main(string[] args)
         {
             stderr.writeln(c.cur);
 
-            c.excluded.each!(a => stderr.writeln(a));
+            c.alsoExcluded.each!(a => stderr.writeln(a.cur));
         }
         else if(opt == CliOptions.ShowExcluded.full)
-            stderr.writeln(c.errMsgs);
+            c.alsoExcluded.each!(a => stderr.writeln(a.errMsg));
     }
 
     addedDecls.byKey.

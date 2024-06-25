@@ -138,12 +138,10 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_o
 
         //~ deepCmpCursors(_old, _new);
 
-        old_orig.excluded ~= new_orig.cur;
-
         const osr = old_orig.cur.getSourceRange;
         const nsr = new_orig.cur.getSourceRange;
 
-        old_orig.errMsgs ~= "New cursor is not equal to previously saved:\n"
+        const errMsg = "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.cur.getPrettyPrinted~"\n"
             ~"New: "~nsr.fileLinePrettyString~"\n"
@@ -153,18 +151,23 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_o
             ~"Key param types: "~key.paramTypes.to!string~"\n"
             ~"Hash old: "~oldHash.to!string~"\n"
             ~"Hash new: "~newHash.to!string;
+
+        old_orig.alsoExcluded ~= CursorDescr.AlsoExcluded(new_orig.cur, errMsg);
     }
 }
 
 struct CursorDescr
 {
+    static struct AlsoExcluded
+    {
+        Cursor cur;
+        string errMsg;
+    }
+
     Cursor cur;
-    Cursor[] excluded;
-    string[] errMsgs;
+    AlsoExcluded[] alsoExcluded;
 
-    invariant() { assert(excluded.length == errMsgs.length); }
-
-    bool isExcluded() const => errMsgs !is null;
+    bool isExcluded() const => alsoExcluded !is null;
 }
 
 version(DebugOutput)
