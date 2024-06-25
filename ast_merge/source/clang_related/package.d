@@ -24,7 +24,7 @@ struct Key
     string name;
 }
 
-/*private*/ Cursor[Key] addedDecls;
+/*private*/ CursorDescr[Key] addedDecls;
 
 version(DebugOutput)  import std.stdio;
 
@@ -99,25 +99,22 @@ void checkAndAdd(ref Cursor cur)
 
     auto found = (key in addedDecls);
 
+    auto descr = CursorDescr(cur);
+
     if(found is null)
     {
         version(DebugOutput) writeln(cur, " not found");
 
-        addedDecls[key] = cur;
+        addedDecls[key] = descr;
     }
     else
-        cmpCursors(key, *found, cur);
+        cmpCursors(key, *found, descr);
 }
 
-private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
+private void cmpCursors(Key key, CursorDescr old_orig, CursorDescr new_orig)
 {
-    Cursor _old;
-    Cursor _new;
-
-    {
-        _old = old_orig;
-        _new = new_orig;
-    }
+    Cursor _old = old_orig.cur;
+    Cursor _new = new_orig.cur;
 
     const ignoreFuncArgsNames = (key.kind == Cursor.Kind.FunctionDecl && !key.isDefinition);
 
@@ -141,20 +138,20 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
 
         //~ deepCmpCursors(_old, _new);
 
-        const osr = old_orig.getSourceRange;
-        const nsr = new_orig.getSourceRange;
+        const osr = old_orig.cur.getSourceRange;
+        const nsr = new_orig.cur.getSourceRange;
 
         throw new DifferentCursorsException(
             key,
-            CursorDescr(old_orig, oldHash),
-            CursorDescr(new_orig, newHash),
+            old_orig,
+            new_orig,
             "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
-            ~old_orig.getPrettyPrinted~"\n"
+            ~old_orig.cur.getPrettyPrinted~"\n"
             ~"New: "~nsr.fileLinePrettyString~"\n"
-            ~new_orig.getPrettyPrinted~"\n"
-            ~"Old orig cursor: "~old_orig.toString~"\n"
-            ~"New orig cursor: "~new_orig.toString~"\n"
+            ~new_orig.cur.getPrettyPrinted~"\n"
+            ~"Old orig cursor: "~old_orig.cur.toString~"\n"
+            ~"New orig cursor: "~new_orig.cur.toString~"\n"
             ~"Key param types: "~key.paramTypes.to!string~"\n"
             ~"Hash old: "~oldHash.to!string~"\n"
             ~"Hash new: "~newHash.to!string
@@ -165,8 +162,9 @@ private void cmpCursors(Key key, Cursor old_orig, Cursor new_orig)
 struct CursorDescr
 {
     Cursor cur;
-    IndependentHash hash;
     string errMsg;
+
+    bool isExcluded() const => errMsg !is null;
 }
 
 class DifferentCursorsException : Exception

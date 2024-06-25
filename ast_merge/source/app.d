@@ -101,7 +101,7 @@ int main(string[] args)
     "======".writeln;
 
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
-    addedDecls.byValue.map!(a => a.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
+    addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
     "Problems:".writeln;
 
