@@ -114,8 +114,7 @@ int main(string[] args)
 
     import std.typecons;
 
-    addedDecls.byKey.
-        map!(a => tuple!("key", "descr")(a, addedDecls[a]))
+    cStorage.getSortedDecls
         .each!(
             a => a.descr.isExcluded
                 ? showExcluded(a.key, a.descr, options.show_excluded)

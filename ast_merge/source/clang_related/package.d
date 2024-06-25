@@ -1,6 +1,7 @@
 module clang_related;
 
 import clang;
+import storage;
 import std.algorithm;
 import std.array;
 import std.conv: to;
@@ -24,7 +25,8 @@ struct Key
     string name;
 }
 
-/*private*/ CursorDescr[Key] addedDecls;
+
+Storage cStorage;
 
 version(DebugOutput)  import std.stdio;
 
@@ -121,7 +123,7 @@ void checkAndAdd(ref Cursor cur)
         isDefinition: cur.isDefinition,
     };
 
-    auto found = (key in addedDecls);
+    auto found = cStorage.findCursor(key);
 
     auto descr = CursorDescr(cur);
 
@@ -129,10 +131,10 @@ void checkAndAdd(ref Cursor cur)
     {
         version(DebugOutput) writeln(cur, " not found");
 
-        addedDecls[key] = descr;
+        cStorage.addCursor(key, descr);
     }
     else
-        cmpCursors(key, *found, descr);
+        cmpCursors(key, (*found).descr, descr);
 }
 
 private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_orig)
