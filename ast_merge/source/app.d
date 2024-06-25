@@ -6,9 +6,12 @@ import std.stdio;
 
 struct CliOptions
 {
+    enum ShowExcluded { no, brief, full, };
+
     string out_file;
     string[] include_files;
     string[] clang_opts;
+    ShowExcluded show_excluded;
     size_t batch_size = 1;
     uint threads = 1;
 }
@@ -25,6 +28,7 @@ int main(string[] args)
             "output", `Output file`, &options.out_file,
             "include", `Additional include files`, &options.include_files,
             "clang_opts", `Clang options`, &options.clang_opts,
+            "show_excluded", `Output excluded entries: no/brief/full`, &options.show_excluded,
             "batch_size", `batch_size`, &options.batch_size,
             "threads", `threads`, &options.threads,
         );
@@ -83,10 +87,24 @@ int main(string[] args)
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
     //~ addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
+    static void showExcluded(in CursorDescr c, in CliOptions.ShowExcluded opt)
+    {
+        if(opt == CliOptions.ShowExcluded.brief)
+        {
+            stderr.writeln(c.cur);
+
+            c.excluded.each!(a => stderr.writeln(a));
+        }
+        else if(opt == CliOptions.ShowExcluded.full)
+            stderr.writeln(c.errMsgs);
+    }
+
     addedDecls.byKey.
         map!(a => addedDecls[a])
         .each!(
-            a => a.isExcluded ? stderr.writeln(a.errMsgs) : stdout.writeln(a.cur.getPrettyPrinted)
+            a => a.isExcluded
+                ? showExcluded(a, options.show_excluded)
+                : stdout.writeln(a.cur.getPrettyPrinted)
         );
 
     return 0;

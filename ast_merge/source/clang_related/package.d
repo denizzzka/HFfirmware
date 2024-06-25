@@ -111,7 +111,7 @@ void checkAndAdd(ref Cursor cur)
         cmpCursors(key, *found, descr);
 }
 
-private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr new_orig)
+private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_orig)
 {
     Cursor _old = old_orig.cur;
     const Cursor _new = new_orig.cur;
@@ -138,6 +138,8 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr
 
         //~ deepCmpCursors(_old, _new);
 
+        old_orig.excluded ~= new_orig.cur;
+
         const osr = old_orig.cur.getSourceRange;
         const nsr = new_orig.cur.getSourceRange;
 
@@ -157,7 +159,10 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr
 struct CursorDescr
 {
     Cursor cur;
+    Cursor[] excluded;
     string[] errMsgs;
+
+    invariant() { assert(excluded.length == errMsgs.length); }
 
     bool isExcluded() const => errMsgs !is null;
 }
