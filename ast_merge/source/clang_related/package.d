@@ -58,6 +58,21 @@ shared static this()
                 "esp_reset_reason_get_hint", // two different sections
                 "esp_system_get_time", // TODO: one of them have "weak" attr and can be ommited automatically
                 "_pmksa_cache_free_entry",
+                "pmksa_cache_expire",
+                "forced_memzero",
+                "new_config",
+                "convert_key_type",
+                "get_array_item",
+                "crypto_rng_wrapper",
+                "http_dispatch_event_to_event_loop",
+                "esp_system_get_time_resolution",
+                "rtc_spinlock",
+                "handle_session_command1",
+                "wpa_parse_generic",
+                "esp_reset_reason_set_hint",
+                "prov_start",
+                "set_config_service",
+                "delete_config",
             ]
         );
         fillAA(StructDecl,
@@ -66,6 +81,8 @@ shared static this()
                 "rsn_pmksa_cache_entry",
                 "mbedtls_cipher_info_t",
                 "wpa_eapol_ie_parse",
+                "rsn_pmksa_cache",
+                "session",
             ]
         );
         fillAA(VarDecl,
@@ -77,6 +94,13 @@ shared static this()
                 "cmd_table",
                 "registered_heaps", // extern and usual struct declarations
                 "default_router_list",
+                "s_ctx",
+                "prefix_list",
+                "neighbor_cache",
+                "chip_name",
+                "destination_cache",
+                "s_config",
+                "rtc_spinlock",
             ]
         );
     }
