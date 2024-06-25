@@ -141,7 +141,7 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr
         const osr = old_orig.cur.getSourceRange;
         const nsr = new_orig.cur.getSourceRange;
 
-        old_orig.errMsg ~= "New cursor is not equal to previously saved:\n"
+        old_orig.errMsgs ~= "New cursor is not equal to previously saved:\n"
             ~"Old: "~osr.fileLinePrettyString~"\n"
             ~old_orig.cur.getPrettyPrinted~"\n"
             ~"New: "~nsr.fileLinePrettyString~"\n"
@@ -157,28 +157,9 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, const ref CursorDescr
 struct CursorDescr
 {
     Cursor cur;
-    string errMsg;
+    string[] errMsgs;
 
-    bool isExcluded() const => errMsg !is null;
-}
-
-class DifferentCursorsException : Exception
-{
-    Key key;
-    CursorDescr c1;
-    CursorDescr c2;
-
-    this(Key key, CursorDescr c1, CursorDescr c2, string msg)
-    {
-        this.key = key;
-        this.c1 = c1;
-        this.c2 = c2;
-
-        this.c1.errMsg = msg;
-        this.c2.errMsg = msg;
-
-        super(msg);
-    }
+    bool isExcluded() const => errMsgs !is null;
 }
 
 version(DebugOutput)

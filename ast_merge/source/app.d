@@ -86,7 +86,7 @@ int main(string[] args)
     addedDecls.byKey.
         map!(a => addedDecls[a])
         .each!(
-            a => a.isExcluded ? stderr.writeln(a.errMsg) : stdout.writeln(a.cur.getPrettyPrinted)
+            a => a.isExcluded ? stderr.writeln(a.errMsgs) : stdout.writeln(a.cur.getPrettyPrinted)
         );
 
     return 0;
