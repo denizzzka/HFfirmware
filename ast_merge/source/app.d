@@ -89,11 +89,13 @@ int main(string[] args)
 
     static void showExcluded(in CursorDescr c, in CliOptions.ShowExcluded opt)
     {
+        static string pretty(in Cursor c) => c.getSourceRange.fileLinePrettyString~"\t"~c.toString; 
+
         if(opt == CliOptions.ShowExcluded.brief)
         {
-            stderr.writeln(c.cur);
+            stderr.writeln(pretty(c.cur));
 
-            c.alsoExcluded.each!(a => stderr.writeln(a.cur));
+            c.alsoExcluded.each!(a => stderr.writeln(pretty(a.cur)));
         }
         else if(opt == CliOptions.ShowExcluded.full)
             c.alsoExcluded.each!(a => stderr.writeln(a.errMsg));

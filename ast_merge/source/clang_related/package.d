@@ -232,7 +232,7 @@ string getPrettyPrinted(in Cursor cur)
     return cur.cx.clang_getCursorPrettyPrinted(null).toString;
 }
 
-private auto getSourceRange(in Cursor c)
+auto getSourceRange(in Cursor c)
 {
     import clang.c.index;
 
@@ -241,7 +241,7 @@ private auto getSourceRange(in Cursor c)
     return SourceRange(clang_getCursorExtent(c.cx));
 }
 
-private string fileLinePrettyString(in SourceRange r)
+string fileLinePrettyString(in SourceRange r)
 {
     return r.path~":"~r.start.line.to!string~":"~r.start.column.to!string;
 }
