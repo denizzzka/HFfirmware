@@ -87,9 +87,11 @@ int main(string[] args)
     //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
     //~ addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
-    static void showExcluded(in CursorDescr c, in CliOptions.ShowExcluded opt)
+    static void showExcluded(in Key key, in CursorDescr c, in CliOptions.ShowExcluded opt)
     {
-        static string pretty(in Cursor c) => c.getSourceRange.fileLinePrettyString~"\t"~c.toString; 
+        stderr.writeln(">>>>>>>>>>>>>>> Key: ", key);
+
+        static string pretty(in Cursor c) => c.getSourceRange.fileLinePrettyString~"\t"~c.toString;
 
         if(opt == CliOptions.ShowExcluded.brief)
         {
@@ -101,12 +103,14 @@ int main(string[] args)
             c.alsoExcluded.each!(a => stderr.writeln(a.errMsg));
     }
 
+    import std.typecons;
+
     addedDecls.byKey.
-        map!(a => addedDecls[a])
+        map!(a => tuple!("key", "descr")(a, addedDecls[a]))
         .each!(
-            a => a.isExcluded
-                ? showExcluded(a, options.show_excluded)
-                : stdout.writeln(a.cur.getPrettyPrinted)
+            a => a.descr.isExcluded
+                ? showExcluded(a.key, a.descr, options.show_excluded)
+                : stdout.writeln(a.descr.cur.getPrettyPrinted)
         );
 
     return 0;
