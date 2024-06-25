@@ -72,7 +72,7 @@ shared static this()
                 "esp_reset_reason_set_hint",
                 "prov_start",
                 "set_config_service",
-                "delete_config",
+                //~ "delete_config",
             ]
         );
         fillAA(StructDecl,
@@ -82,7 +82,7 @@ shared static this()
                 "mbedtls_cipher_info_t",
                 "wpa_eapol_ie_parse",
                 "rsn_pmksa_cache",
-                "session",
+                //~ "session",
             ]
         );
         fillAA(VarDecl,
@@ -100,7 +100,7 @@ shared static this()
                 "chip_name",
                 "destination_cache",
                 "s_config",
-                "rtc_spinlock",
+                //~ "rtc_spinlock",
             ]
         );
     }
@@ -162,19 +162,26 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_o
 
         //~ deepCmpCursors(_old, _new);
 
-        const osr = old_orig.cur.getSourceRange;
-        const nsr = new_orig.cur.getSourceRange;
+        string errMsg;
 
-        const errMsg = "New cursor is not equal to previously saved:\n"
-            ~"Old: "~osr.fileLinePrettyString~"\n"
-            ~old_orig.cur.getPrettyPrinted~"\n"
-            ~"New: "~nsr.fileLinePrettyString~"\n"
-            ~new_orig.cur.getPrettyPrinted~"\n"
-            ~"Old orig cursor: "~old_orig.cur.toString~"\n"
-            ~"New orig cursor: "~new_orig.cur.toString~"\n"
-            ~"Key param types: "~key.paramTypes.to!string~"\n"
-            ~"Hash old: "~oldHash.to!string~"\n"
-            ~"Hash new: "~newHash.to!string;
+        import main: CliOptions, options;
+
+        if(options.show_excluded == CliOptions.ShowExcluded.full)
+        {
+            const osr = old_orig.cur.getSourceRange;
+            const nsr = new_orig.cur.getSourceRange;
+
+            errMsg = "New cursor is not equal to previously saved:\n"
+                ~"Old: "~osr.fileLinePrettyString~"\n"
+                ~old_orig.cur.getPrettyPrinted~"\n"
+                ~"New: "~nsr.fileLinePrettyString~"\n"
+                ~new_orig.cur.getPrettyPrinted~"\n"
+                ~"Old orig cursor: "~old_orig.cur.toString~"\n"
+                ~"New orig cursor: "~new_orig.cur.toString~"\n"
+                ~"Key param types: "~key.paramTypes.to!string~"\n"
+                ~"Hash old: "~oldHash.to!string~"\n"
+                ~"Hash new: "~newHash.to!string;
+        }
 
         old_orig.alsoExcluded ~= CursorDescr.AlsoExcluded(new_orig.cur, errMsg);
     }
