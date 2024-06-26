@@ -108,10 +108,10 @@ int main(string[] args)
             if(a.descr.isExcluded)
             {
                 showExcluded(a.key, a.descr, options.show_excluded);
-                return true;
+                return false;
             }
             else
-                return false;
+                return true;
         })
         .map!(a => a.descr.cur);
 
