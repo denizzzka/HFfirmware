@@ -57,9 +57,9 @@ int main(string[] args)
         CliOptions._this = &options;
     }
 
-    import std.file: write;
+    import std.stdio: File;
 
-    write(options.out_file, ""); // to ensure that file can be created
+    auto outFile = File(options.out_file, "w");
 
     import std.parallelism;
 
@@ -114,12 +114,20 @@ int main(string[] args)
 
     import std.typecons;
 
-    cStorage.getSortedDecls
-        .each!(
-            a => a.descr.isExcluded
-                ? showExcluded(a.key, a.descr, options.show_excluded)
-                : stdout.writeln(a.descr.cur.getPrettyPrinted)
-        );
+    auto statements = cStorage.getSortedDecls
+        .map!((a) {
+            if(!a.descr.isExcluded)
+                return a.descr.cur.getPrettyPrinted;
+            else
+            {
+                showExcluded(a.key, a.descr, options.show_excluded);
+                return null;
+            }
+        });
+
+    auto toCFile = statements
+        .map!(a => a.chomp~";\n")
+        .each!(a => outFile.writeln(a));
 
     return 0;
 }
