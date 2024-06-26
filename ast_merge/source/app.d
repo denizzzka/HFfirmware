@@ -74,19 +74,16 @@ int main(string[] args)
 
     auto units = taskPool.amap!parseF(filenames);
 
+    import dpp.expansion;
+
+    auto unitsCanonicalCursors = units.map!(a => a.canonicalCursors);
+
     import clang;
 
-    units
-        .map!(a => a.cursor)
-        .map!(a => a.children)
+    unitsCanonicalCursors
         .joiner
         .tee!(a => assert(a.isFileScope))
         .each!checkAndAdd;
-
-    "======".writeln;
-
-    //~ addedDecls.byValue.each!(a => writeln(a, "\n   <<<<<<<<<<<<\n"));
-    //~ addedDecls.byValue.map!(a => a.cur.getPrettyPrinted).each!(a => writeln(a, "\n   ===***===\n"));
 
     static void showExcluded(in Key key, in CursorDescr c, in CliOptions.ShowExcluded opt)
     {
@@ -107,19 +104,40 @@ int main(string[] args)
     import std.typecons;
 
     auto statements = cStorage.getSortedDecls
-        .map!((a) {
-            if(!a.descr.isExcluded)
-                return a.descr.cur.getPrettyPrinted;
-            else
+        .filter!((a) {
+            if(a.descr.isExcluded)
             {
                 showExcluded(a.key, a.descr, options.show_excluded);
-                return null;
+                return true;
             }
-        });
+            else
+                return false;
+        })
+        .map!(a => a.descr.cur);
 
-    auto toCFile = statements
-        .map!(a => a.chomp~";\n")
-        .each!(a => outFile.writeln(a));
+    import dpp.runtime.context;
+    import dpp.runtime.options: Options;
+
+    auto dppOptions = Options();
+    auto language = dpp.runtime.context.Language.C;
+    auto context = Context(dppOptions, language);
+
+    void addDContextData(ref Cursor cursor, string file = __FILE__, size_t line = __LINE__)
+    {
+        import dpp.translation.translation;
+
+        const indentation = context.indentation;
+        const lines = translateTopLevelCursor(cursor, context, file, line);
+        if(lines.length) context.writeln(lines);
+        context.setIndentation(indentation);
+    }
+
+    statements
+        .each!(a => addDContextData(a));
+
+    context.fixNames;
+
+    outFile.writeln(context.translation);
 
     return 0;
 }
