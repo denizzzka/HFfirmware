@@ -142,6 +142,7 @@ int main(string[] args)
     outFile.writeln(preamble(true));
     outFile.writeln("import core.stdc.stdatomic;");
     outFile.writeln("alias __gnuc_va_list = va_list;");
+    outFile.writeln("extern(C) {");
 
     static void addDContextData(ref Cursor cursor, ref Context context, string file = __FILE__, size_t line = __LINE__)
     {
@@ -162,6 +163,8 @@ int main(string[] args)
     context.fixNames;
 
     outFile.writeln(context.translation);
+
+    outFile.writeln("}");
 
     return 0;
 }
