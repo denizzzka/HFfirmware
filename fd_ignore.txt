@@ -11,5 +11,6 @@ main/
 # clashes with struct "session" from security2.c
 **/security/security1.c.i
 
-# prevents state -> state_ and avoids issue with "http_strerror_tab" - https://github.com/atilaneves/dpp/issues/351
+# prevents state -> state_ (https://github.com/atilaneves/dpp/issues/352)
+# and avoids issue with "http_strerror_tab" (https://github.com/atilaneves/dpp/issues/351)
 **/http_parser.c.i
