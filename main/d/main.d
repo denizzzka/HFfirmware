@@ -1,7 +1,6 @@
 module main;
 
-import tasks; //FreeRTOS calls
-//~ import i2c_master;
+import esp_idf;
 
 pragma(crt_constructor)
 shared static this()
@@ -11,6 +10,6 @@ shared static this()
 extern(C) void app_main()
 {
     while(1) {
-        vTaskDelay(portTICK_PERIOD_MS * 10);
+        vTaskDelay(1000 /*portTICK_PERIOD_MS*/ * 10);
     }
 }
