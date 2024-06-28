@@ -36,7 +36,7 @@ shared static this()
 {
     with(Cursor.Kind)
     {
-        fillAA(StaticAssert,    []);
+        fillAA(StaticAssert, ["##ANY##"]); //TODO: don't parse any static asserts
         fillAA(TypedefDecl,
             [
                 //~ "##ANY##",
@@ -49,13 +49,12 @@ shared static this()
         );
         fillAA(StructDecl,
             [
-                //~ "session_t_", // produces strange unused code alias session_t_ = session;
                 //~ "session",
             ]
         );
         fillAA(VarDecl,
             [
-                "http_strerror_tab", // https://github.com/atilaneves/dpp/issues/351
+                //~ "http_strerror_tab", // https://github.com/atilaneves/dpp/issues/351
             ]
         );
     }
