@@ -72,6 +72,7 @@ void checkAndAdd(ref Cursor cur)
     Key key = {
         name: cur.spelling,
         kind: cur.kind,
+        paramTypes: cur.type.paramTypes.map!(a => a.spelling.idup).array,
         isDefinition: cur.isDefinition,
     };
 
@@ -134,6 +135,7 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_o
                 ~new_orig.cur.getPrettyPrinted~"\n"
                 ~"Old orig cursor: "~old_orig.cur.toString~"\n"
                 ~"New orig cursor: "~new_orig.cur.toString~"\n"
+                ~"Key param types: "~key.paramTypes.to!string~"\n"
                 ~"Hash old: "~oldHash.to!string~"\n"
                 ~"Hash new: "~newHash.to!string;
         }
