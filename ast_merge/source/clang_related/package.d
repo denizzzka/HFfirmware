@@ -36,9 +36,12 @@ shared static this()
 {
     with(Cursor.Kind)
     {
-        //~ fillAA(StaticAssert,    [""]);
-        //~ fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
-        fillAA(FunctionDecl, //FIXME: remove
+        fillAA(StaticAssert,    []);
+        fillAA(TypedefDecl,
+            [
+                //~ "##ANY##",
+            ]);
+        fillAA(FunctionDecl,
             [
                 //~ "esp_log_buffer_hex",
                 //~ "esp_log_buffer_char",
@@ -48,14 +51,11 @@ shared static this()
             [
                 //~ "session_t_", // produces strange unused code alias session_t_ = session;
                 //~ "session",
-                "http_strerror_tab",
             ]
         );
         fillAA(VarDecl,
             [
                 "http_strerror_tab", // https://github.com/atilaneves/dpp/issues/351
-                //~ "TAG",
-                //~ "SPI_TAG",
             ]
         );
     }
@@ -74,6 +74,19 @@ void checkAndAdd(ref Cursor cur)
         kind: cur.kind,
         isDefinition: cur.isDefinition,
     };
+
+    {
+        auto ignored = (key.kind in ignoredDecls);
+        if(ignored !is null)
+        {
+            bool mathed =
+                ((cur.spelling in *ignored) !is null) ||
+                (("##ANY##" in *ignored) !is null);
+
+            // we are on ignored cursor?
+            if(mathed) return;
+        }
+    }
 
     auto found = cStorage.findCursor(key);
 
@@ -103,17 +116,6 @@ private void cmpCursors(Key key, ref CursorDescr old_orig, ref CursorDescr new_o
 
     if(!succCmp)
     {
-        auto ignored = (key.kind in ignoredDecls);
-        if(ignored !is null)
-        {
-            bool mathed =
-                ((_old.spelling in *ignored) !is null) ||
-                (("##ANY##" in *ignored) !is null);
-
-            // we are on ignored cursor?
-            if(mathed) return;
-        }
-
         //~ deepCmpCursors(_old, _new);
 
         string errMsg;
