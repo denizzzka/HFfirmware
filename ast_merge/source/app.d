@@ -12,6 +12,7 @@ struct CliOptions
     static __gshared CliOptions* _this;
 
     string out_file;
+    bool debug_output;
     string[] include_files;
     string[] clang_opts;
     ShowExcluded show_excluded;
@@ -29,6 +30,7 @@ int main(string[] args)
         //TODO: add option for files splitten by zero byte
         auto helpInformation = getopt(args,
             "output", `Output file`, &options.out_file,
+            "debug_output", `Add debug info to output file`, &options.debug_output,
             "include", `Additional include files`, &options.include_files,
             "clang_opts", `Clang options`, &options.clang_opts,
             "show_excluded", `Output excluded entries: no/brief/full`, &options.show_excluded,
@@ -152,7 +154,10 @@ int main(string[] args)
     }
 
     statements
-        .each!(a => addDContextData(a, context));
+        .each!((a){
+                if(options.debug_output) context.writeln("\n\n// Cursor: " ~ a.to!string);
+                addDContextData(a, context);
+            });
 
     context.fixNames;
 
