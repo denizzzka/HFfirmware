@@ -7,7 +7,7 @@ import std.typecons;
 struct Key
 {
     Cursor.Kind kind;
-    string[] paramTypes; // for functions
+    string[] paramTypes; // used implicitly for function comparison, do not remove!
     bool isDefinition;
     string name;
 }
