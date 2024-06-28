@@ -129,6 +129,9 @@ int main(string[] args)
     import dpp.runtime.options: Options;
 
     auto dppOptions = Options();
+    dppOptions.alwaysScopedEnums = true;
+    dppOptions.noSystemHeaders = true;
+
     auto language = dpp.runtime.context.Language.C;
     auto context = Context(dppOptions, language);
 
