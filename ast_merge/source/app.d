@@ -104,7 +104,7 @@ int main(string[] args)
 
     import std.typecons;
 
-    auto statements = cStorage.getSortedDecls
+    auto chunks = cStorage.getSortedDecls
         .filter!((a) {
             if(a.descr.isExcluded)
             {
@@ -114,6 +114,15 @@ int main(string[] args)
             else
                 return true;
         })
+        .array
+        .sort!((a, b) => a.key.name < b.key.name || (a.key.name == b.key.name && a.key.kind < b.key.kind))
+        .chunkBy!((a, b) => a.key.kind == b.key.kind && a.key.name == b.key.name);
+
+    auto statements =
+        chunks
+        .map!(chunk => chunk.fold!(
+            (ref a, ref b) => a.key.isDefinition ? a : b
+        ))
         .map!(a => a.descr.cur);
 
     import dpp.runtime.context;
@@ -123,18 +132,18 @@ int main(string[] args)
     auto language = dpp.runtime.context.Language.C;
     auto context = Context(dppOptions, language);
 
-    void addDContextData(ref Cursor cursor, string file = __FILE__, size_t line = __LINE__)
+    static void addDContextData(ref Cursor cursor, ref Context context, string file = __FILE__, size_t line = __LINE__)
     {
         import dpp.translation.translation;
 
         const indentation = context.indentation;
         const lines = translateTopLevelCursor(cursor, context, file, line);
-        if(lines.length) context.writeln(lines);
+        context.writeln(lines);
         context.setIndentation(indentation);
     }
 
     statements
-        .each!(a => addDContextData(a));
+        .each!(a => addDContextData(a, context));
 
     context.fixNames;
 
