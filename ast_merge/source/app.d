@@ -131,12 +131,14 @@ int main(string[] args)
     auto dppOptions = Options();
     dppOptions.alwaysScopedEnums = true;
     dppOptions.noSystemHeaders = true;
+    dppOptions.ignoreMacros = true;
 
     auto language = dpp.runtime.context.Language.C;
     auto context = Context(dppOptions, language);
 
     import dpp.runtime.app: preamble;
     outFile.writeln(preamble(true));
+    outFile.writeln("alias __gnuc_va_list = va_list;");
 
     static void addDContextData(ref Cursor cursor, ref Context context, string file = __FILE__, size_t line = __LINE__)
     {
