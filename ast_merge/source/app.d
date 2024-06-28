@@ -138,6 +138,7 @@ int main(string[] args)
 
     import dpp.runtime.app: preamble;
     outFile.writeln(preamble(true));
+    outFile.writeln("import core.stdc.stdatomic;");
     outFile.writeln("alias __gnuc_va_list = va_list;");
 
     static void addDContextData(ref Cursor cursor, ref Context context, string file = __FILE__, size_t line = __LINE__)

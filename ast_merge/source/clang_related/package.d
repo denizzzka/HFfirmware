@@ -36,64 +36,26 @@ shared static this()
 {
     with(Cursor.Kind)
     {
-        fillAA(StaticAssert,    [""]);
-        fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
+        //~ fillAA(StaticAssert,    [""]);
+        //~ fillAA(TypedefDecl,     ["##ANY##"]); //FIXME: remove
         fillAA(FunctionDecl, //FIXME: remove
             [
-                "esp_log_buffer_hex",
-                "esp_log_buffer_char",
-                "is_valid_host",
-                "spi_intr",
-                "xTimerCreateTimerTask",
-                "lookup_cmd_handler",
-                "efuse_ll_set_pgm_cmd",
-                "read_delta_t_from_efuse", // one is from legacy module
-                "esp_reset_reason_get_hint", // two different sections
-                "esp_system_get_time", // TODO: one of them have "weak" attr and can be ommited automatically
-                "_pmksa_cache_free_entry",
-                "pmksa_cache_expire",
-                "forced_memzero",
-                "new_config",
-                "convert_key_type",
-                "get_array_item",
-                "crypto_rng_wrapper",
-                "http_dispatch_event_to_event_loop",
-                "esp_system_get_time_resolution",
-                "rtc_spinlock",
-                "handle_session_command1",
-                "wpa_parse_generic",
-                "esp_reset_reason_set_hint",
-                "prov_start",
-                "set_config_service",
-                //~ "delete_config",
+                //~ "esp_log_buffer_hex",
+                //~ "esp_log_buffer_char",
             ]
         );
         fillAA(StructDecl,
             [
-                "sigaction",
-                "rsn_pmksa_cache_entry",
-                "mbedtls_cipher_info_t",
-                "wpa_eapol_ie_parse",
-                "rsn_pmksa_cache",
+                //~ "session_t_", // produces strange unused code alias session_t_ = session;
                 //~ "session",
+                "http_strerror_tab",
             ]
         );
         fillAA(VarDecl,
             [
-                "TAG",
-                "SPI_TAG",
-                "spihost",
-                "s_platform",
-                "cmd_table",
-                "registered_heaps", // extern and usual struct declarations
-                "default_router_list",
-                "s_ctx",
-                "prefix_list",
-                "neighbor_cache",
-                "chip_name",
-                "destination_cache",
-                "s_config",
-                //~ "rtc_spinlock",
+                "http_strerror_tab", // https://github.com/atilaneves/dpp/issues/351
+                //~ "TAG",
+                //~ "SPI_TAG",
             ]
         );
     }
