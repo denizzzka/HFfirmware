@@ -1,7 +1,16 @@
 module storage;
 
+import clang: Cursor;
 import clang_related;
 import std.typecons;
+
+struct Key
+{
+    Cursor.Kind kind;
+    string[] paramTypes; // for functions
+    bool isDefinition;
+    string name;
+}
 
 struct Storage
 {

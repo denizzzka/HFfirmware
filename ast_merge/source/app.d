@@ -79,6 +79,7 @@ int main(string[] args)
     auto unitsCanonicalCursors = units.map!(a => a.canonicalCursors);
 
     import clang;
+    import storage: Key;
 
     unitsCanonicalCursors
         .joiner

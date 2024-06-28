@@ -17,15 +17,6 @@ TranslationUnit parseFile(string filename, in string[] args)
     return parse(filename, args); //, flags);
 }
 
-struct Key
-{
-    Cursor.Kind kind;
-    string[] paramTypes; // for functions
-    bool isDefinition;
-    string name;
-}
-
-
 Storage cStorage;
 
 version(DebugOutput)  import std.stdio;
