@@ -25,7 +25,7 @@ fdfind --base-directory ./preprocessed/esp-idf --type f --extension "c.i" \
 
 echo "Merging *.i files"
 
-time dub run --root=ast_merge/ --build=release -- --clang_opts="--target=riscv32" --batch_size=10 --threads=8 --include=importc.h --show_excluded=brief --debug_output --output ${D_BINDING_MODULE} < preprocessed_files_list.txt 2> err.log
+time dub run --root=~/Dev/mc2d/ --build=release -- --clang_opts="--target=riscv32" --threads=8 --include=importc.h --show_excluded=brief --debug_output --output ${D_BINDING_MODULE} < preprocessed_files_list.txt 2> err.log
 
 # Probably, this is same case as in https://github.com/atilaneves/dpp/issues/350
 sed -i 's/align(1)://g' ${D_BINDING_MODULE}
